@@ -1,0 +1,6 @@
+[submodule "source/third_party/meson"]
+	path = source/third_party/meson
+	url = https://github.com/mesonbuild/meson.git
+[submodule "source/third_party/pybind11"]
+	path = source/third_party/pybind11
+	url = https://github.com/pybind/pybind11.git

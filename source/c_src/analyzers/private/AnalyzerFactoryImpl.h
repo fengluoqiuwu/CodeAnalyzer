@@ -1,0 +1,8 @@
+//
+// Created by Eden_ on 2025/3/26.
+//
+
+#ifndef ANALYZERFACTORYIMPL_H
+#define ANALYZERFACTORYIMPL_H
+
+#endif //ANALYZERFACTORYIMPL_H

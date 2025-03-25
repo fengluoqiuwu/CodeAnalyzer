@@ -1,0 +1,8 @@
+//
+// Created by Eden_ on 2025/3/26.
+//
+
+#ifndef CPOINTERSAFETYANALYZER_H
+#define CPOINTERSAFETYANALYZER_H
+
+#endif //CPOINTERSAFETYANALYZER_H

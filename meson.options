@@ -1,0 +1,33 @@
+option('enable-threading', type: 'boolean', value: true,
+       description: 'Enable multi-threaded analysis engine')
+
+option('enable-optimizer', type: 'boolean', value: true,
+       description: 'Enable memory and performance optimizations')
+
+option('enable-64bit-index', type: 'boolean', value: false,
+       description: 'Use 64-bit indexing (for very large projects)')
+
+option('enable-cli', type: 'boolean', value: true,
+       description: 'Build command-line interface frontend')
+
+option('enable-python-bindings', type: 'boolean', value: true,
+       description: 'Enable Python module bindings (via pybind11)')
+
+option('enable-logging', type: 'boolean', value: true,
+       description: 'Enable internal logging and diagnostics output')
+
+option('build-tests', type: 'boolean', value: false,
+       description: 'Build test targets and analysis validation framework')
+
+option('enable-plugin-system', type: 'boolean', value: true,
+       description: 'Enable plugin system for custom analyzers')
+
+option('use-system-pybind11', type: 'boolean', value: false,
+       description: 'Use system-installed pybind11 instead of bundled third_party')
+
+option('enable-ai-module', type: 'boolean', value: false,
+       description: 'Enable experimental AI-powered analysis features')
+
+option('simd-level', type: 'string', value: 'auto',
+       description: 'SIMD optimization level to target (auto, AVX2, AVX512)')
+
