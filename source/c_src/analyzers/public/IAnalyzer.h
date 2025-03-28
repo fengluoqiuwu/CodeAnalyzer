@@ -1,6 +1,7 @@
-//
-// Created by Eden_ on 2025/3/26.
-//
+// ================================
+// CodeAnalyzer - source/c_src/analyzers/public/IAnalyzer.h
+// Interface for language-specific analyzers used in the static analysis framework.
+// ================================
 
 #ifndef IANALYZER_H
 #define IANALYZER_H

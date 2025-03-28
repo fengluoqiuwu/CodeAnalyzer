@@ -5,11 +5,11 @@
 #ifndef LANGUAGE_H
 #define LANGUAGE_H
 
-//enum class Language {
-//    C,
-//    Cpp,
-//    Java,
-//    Python
-//};
+enum class Language {
+    C,
+    Cpp,
+    Java,
+    Python
+};
 
 #endif //LANGUAGE_H
