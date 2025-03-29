@@ -1,37 +1,65 @@
-# A clang-format style that approximates Python's PEP 7
-# Useful for IDE integration
-#
-# Based on Paul Ganssle's version at
-# https://gist.github.com/pganssle/0e3a5f828b4d07d79447f6ced8e7e4db
-# and modified for NumPy
+---
+Language: Cpp
 BasedOnStyle: Google
-AlignAfterOpenBracket: Align
+AccessModifierOffset: -4
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignOperands: true
+AlignTrailingComments: false
 AllowShortEnumsOnASingleLine: false
 AllowShortIfStatementsOnASingleLine: false
-AlwaysBreakAfterReturnType: TopLevel
-BreakBeforeBraces: Stroustrup
-ColumnLimit: 79
+BraceWrapping: 
+  AfterCaseLabel: false
+  AfterClass: false
+  AfterControlStatement: false
+  AfterEnum: false
+  AfterFunction: false
+  AfterNamespace: false
+  AfterStruct: false
+  AfterUnion: false
+  AfterExternBlock: false
+  BeforeCatch: false
+  BeforeElse: false
+  BeforeLambdaBody: false
+  BeforeWhile: false
+  SplitEmptyFunction: true
+  SplitEmptyRecord: true
+  SplitEmptyNamespace: true
+BreakBeforeBraces: Custom
+BreakConstructorInitializers: AfterColon
+BreakConstructorInitializersBeforeComma: false
+ColumnLimit: 120
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
 ContinuationIndentWidth: 8
 DerivePointerAlignment: false
+IncludeBlocks: Preserve
+IncludeCategories: 
+  - Regex: '^<.*'
+    Priority: 1
+  - Regex: '^".*'
+    Priority: 2
+  - Regex: '.*'
+    Priority: 3
+IncludeIsMainRegex: '([-_](test|unittest))?$'
 IndentWidth: 4
-IncludeBlocks: Regroup
-IncludeCategories:
-  - Regex:           '^[<"](Python|structmember|pymem)\.h'
-    Priority:        -3
-    CaseSensitive:   true
-  - Regex:           '^"numpy/'
-    Priority:        -2
-  - Regex:           '^"(npy_pycompat|npy_config)'
-    Priority:        -1
-  - Regex:           '^"[[:alnum:]_.]+"'
-    Priority:        1
-  - Regex:           '^<[[:alnum:]_.]+"'
-    Priority:        2
-Language: Cpp
+InsertNewlineAtEOF: true
+MacroBlockBegin: ''
+MacroBlockEnd: ''
+MaxEmptyLinesToKeep: 2
+NamespaceIndentation: All
 PointerAlignment: Right
-ReflowComments: true
-SpaceBeforeParens: ControlStatements
+SpaceAfterCStyleCast: true
+SpaceAfterTemplateKeyword: false
+SpaceBeforeRangeBasedForLoopColon: false
+SpaceInEmptyParentheses: false
+SpacesBeforeTrailingComments: 1
+SpacesInAngles: false
+SpacesInConditionalStatement: false
+SpacesInCStyleCastParentheses: false
 SpacesInParentheses: false
-StatementMacros: [PyObject_HEAD, PyObject_VAR_HEAD, PyObject_HEAD_EXTRA]
+StatementMacros: 
+  - PyObject_HEAD
+  - PyObject_VAR_HEAD
+  - PyObject_HEAD_EXTRA
 TabWidth: 4
-UseTab: Never
+...

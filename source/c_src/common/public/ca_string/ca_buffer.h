@@ -1,6 +1,11 @@
+// ================================
+// CodeAnalyzer - source/c_src/common/public/ca_string/ca_buffer.h
 //
-// Created by Eden_ on 2025/3/26.
-//
+// @file
+// @brief Defines the `ca_buffer` template for handling character buffers with
+//        various encodings (ASCII, UTF-8, UTF-32), providing utilities for
+//        memory operations, buffer comparison, and character property checks.
+// ================================
 
 #ifndef CA_BUFFER_H
 #define CA_BUFFER_H
@@ -28,7 +33,7 @@ enum class ca_buffer_implemented_unary_functions {
 };
 
 /**
- * @struct
+ * @struct ca_buffer
  * @brief A template struct representing a buffer for handling
  *        different character encodings.
  *
@@ -69,9 +74,9 @@ struct ca_buffer {
      * typically represented by 4 bytes.
      *
      * @return The number of codepoints in the buffer. This value is computed based
-     * on the encoding and may vary depending on how the data is stored and interpreted.
+     *         on the encoding and may vary depending on how the data is stored and interpreted.
      */
-    inline ca_size_t
+    [[nodiscard]] inline ca_size_t
     num_codepoints() const;
 
     /**
@@ -107,7 +112,7 @@ struct ca_buffer {
      *
      * @return A copy of the Buffer object before decrementing.
      */
-    inline ca_buffer<encoding> &
+    inline ca_buffer<encoding>
     operator ++(int);
 
     /**
@@ -123,7 +128,7 @@ struct ca_buffer {
      *
      * @return A copy of the Buffer object before decrementing.
      */
-    inline ca_buffer<encoding> &
+    inline ca_buffer<encoding>
     operator --(int);
 
     /**
@@ -133,6 +138,13 @@ struct ca_buffer {
      */
     inline ca_char4_t
     operator *() const;
+
+    /**
+     * Check if the buffer is empty.
+     * @return True if the buffer is empty, false otherwise.
+     */
+    [[nodiscard]] inline bool
+    empty() const;
 
     /**
      * @brief Compare memory of two buffers.
@@ -172,8 +184,8 @@ struct ca_buffer {
      *       - For ASCII and UTF8, this is the number of bytes.
      *       - For UTF32, this is the number of characters.
      */
-    inline void
-    buffer_memset(ca_char4_t fill_char, ca_size_t n_chars) const;
+    inline ca_size_t
+    buffer_memset(ca_char4_t fill_char, ca_size_t n_chars);
 
     /**
      * @brief Fill the buffer with zeros starting from a specified index.
@@ -203,7 +215,7 @@ struct ca_buffer {
      *
      * @return The number of bytes for the next character.
      */
-    inline ca_size_t
+    [[nodiscard]] inline ca_size_t
     num_bytes_next_character() const;
 
     /**
@@ -218,7 +230,7 @@ struct ca_buffer {
      * @return true if the function succeeds for all codepoints, false otherwise.
      */
     template <ca_buffer_implemented_unary_functions unary_type>
-    inline bool
+    [[nodiscard]] inline bool
     unary_loop() const;
 
     /**
@@ -226,7 +238,7 @@ struct ca_buffer {
      *
      * @return true if all characters are alphabetic, false otherwise.
      */
-    inline bool
+    [[nodiscard]] inline bool
     is_alpha() const;
 
     /**
@@ -234,7 +246,7 @@ struct ca_buffer {
      *
      * @return true if all characters are decimal digits, false otherwise.
      */
-    inline bool
+    [[nodiscard]] inline bool
     is_decimal() const;
 
     /**
@@ -242,7 +254,7 @@ struct ca_buffer {
      *
      * @return true if all characters are digits, false otherwise.
      */
-    inline bool
+    [[nodiscard]] inline bool
     is_digit() const;
 
     /**
@@ -250,7 +262,7 @@ struct ca_buffer {
      *
      * @return true if the first character is space, false otherwise.
      */
-    inline bool
+    [[nodiscard]] inline bool
     first_character_is_space() const;
 
     /**
@@ -258,7 +270,7 @@ struct ca_buffer {
      *
      * @return true if all characters are space, false otherwise.
      */
-    inline bool
+    [[nodiscard]] inline bool
     is_space() const;
 
     /**
@@ -266,7 +278,7 @@ struct ca_buffer {
      *
      * @return true if all characters are alphanumeric, false otherwise.
      */
-    inline bool
+    [[nodiscard]] inline bool
     is_alphanumeric() const;
 
     /**
@@ -279,7 +291,7 @@ struct ca_buffer {
      *
      * @return True if the buffer is in lower case; otherwise, false.
      */
-    inline bool
+    [[nodiscard]] inline bool
     islower() const;
 
     /**
@@ -292,7 +304,7 @@ struct ca_buffer {
      *
      * @return True if the buffer  is in upper case; otherwise, false.
      */
-    inline bool
+    [[nodiscard]] inline bool
     isupper() const;
 
     /**
@@ -306,7 +318,7 @@ struct ca_buffer {
      *
      * @return True if the buffer is in title case; otherwise, false.
      */
-    inline bool
+    [[nodiscard]] inline bool
     istitle() const;
 
     /**
@@ -314,7 +326,7 @@ struct ca_buffer {
      *
      * @return True if all characters are numeric; otherwise, false.
      */
-    inline bool
+    [[nodiscard]] inline bool
     isnumeric() const;
 
     /**
@@ -348,47 +360,6 @@ struct ca_buffer {
     inline int
     strcmp(ca_buffer<encoding> other, bool ignore_trailing_whitespace = false) const;
 
-};
-
-/**
- * @brief A functor for calling specific unary buffer functions based on the specified operation.
- *
- * This template struct enables calling various unary functions (e.g., ISALPHA, ISDIGIT, etc.) on a given
- * buffer of type `ca_buffer<encoding>`. The function to be applied is determined by the `function`
- * template parameter, and the result of the function call is returned as the type `T`.
- *
- * The following unary functions are supported:
- * - ISALPHA
- * - ISDECIMAL
- * - ISDIGIT
- * - ISSPACE
- * - ISALNUM
- * - ISNUMERIC
- *
- * The static assertion ensures that only valid function values are used.
- *
- * @tparam encoding The encoding type used by the buffer.
- * @tparam function The unary function to be applied (e.g., ISALPHA).
- * @tparam T The return type of the unary function.
- */
-template <ca_encoding_t encoding, ca_buffer_implemented_unary_functions function, typename T>
-struct call_buffer_member_function {
-    static_assert(function == ca_buffer_implemented_unary_functions::ISALPHA ||
-                  function == ca_buffer_implemented_unary_functions::ISDECIMAL ||
-                  function == ca_buffer_implemented_unary_functions::ISDIGIT ||
-                  function == ca_buffer_implemented_unary_functions::ISSPACE ||
-                  function == ca_buffer_implemented_unary_functions::ISALNUM ||
-                  function == ca_buffer_implemented_unary_functions::ISNUMERIC,
-                  "Invalid ca_buffer_implemented_unary_functions value "
-                  "in call_buffer_member_function.");
-
-    /**
-     * @brief Calls the specified unary function on the provided buffer.
-     *
-     * @param buffer The buffer on which the unary function will be applied.
-     * @return The result of the unary function.
-     */
-    T operator()(ca_buffer<encoding> buffer);
 };
 
 }

@@ -8,3 +8,7 @@
 .idea
 # Understand File
 *.und
+
+# CMake build floder
+/build-debug/
+/build-release/

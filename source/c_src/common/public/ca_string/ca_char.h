@@ -32,8 +32,7 @@ enum class ca_encoding_t {
  * @tparam encoding The character encoding type to calculate the byte size.
  *
  * @note This function assumes that the character `c` is properly encoded according to the specified
- *       `encoding`. If the encoding is unsupported or the character is invalid, the function will
- *       return `-1`.
+ *       `encoding`. If the encoding is unsupported, the function will return `-1`.
  */
 template <ca_encoding_t encoding>
 inline int

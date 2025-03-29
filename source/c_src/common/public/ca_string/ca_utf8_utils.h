@@ -55,7 +55,7 @@ int
 ucs4_code_to_utf8_char_without_check(ca_char4_t code, ca_char_t *c);
 
 // ----------------------------
-// Number of Bytes and Codepoints getting functions
+// Bytes of character getting functions
 // ----------------------------
 
 /**
@@ -87,8 +87,6 @@ num_utf8_bytes_for_codepoint(ca_char4_t code);
 // ----------------------------
 // Buffer Number of codepoints calculation functions
 // ----------------------------
-
-
 
 /**
  * @brief Counts the number of codepoints without validating UTF-8 sequences.
@@ -181,7 +179,7 @@ utf8_size_of_utf32_buffer_encode(
 void
 find_previous_utf8_character(
         const ca_char_t *current, ca_size_t nchar,
-        ca_size_t **previous_loc);
+        ca_char_t **previous_loc);
 
 /**
  * @brief Finds the byte locations of the specified UTF-8 code point indices in a buffer.

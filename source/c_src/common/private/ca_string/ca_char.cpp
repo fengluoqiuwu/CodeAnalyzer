@@ -26,27 +26,7 @@ ca_get_bytes<ca_encoding_t::CA_ENCODING_ASCII>(const ca_char_t *c) {
 template <>
 inline int
 ca_get_bytes<ca_encoding_t::CA_ENCODING_UTF8>(const ca_char_t *c) {
-    // Check the first byte to determine the length of the UTF-8 character
-    const auto byte1 = static_cast<ca_char_t>(*c);
-
-    if ((byte1 & 0x80) == 0) {
-        // 1-byte character (ASCII)
-        return 1;
-    }
-    else if ((byte1 & 0xE0) == 0xC0) {
-        // 2-byte character
-        return 2;
-    }
-    else if ((byte1 & 0xF0) == 0xE0) {
-        // 3-byte character
-        return 3;
-    }
-    else if ((byte1 & 0xF8) == 0xF0) {
-        // 4-byte character
-        return 4;
-    }
-
-    return -1;
+    return utf8::num_utf8_bytes_for_utf8_character_without_check(c);
 }
 
 template <>
@@ -373,7 +353,7 @@ ca_isdecimal(const ca_char4_t c) {
 
 template <ca_encoding_t encoding, ca_char_check_types check_type>
 inline bool
-ca_char_check(ca_char_t c) {
+ca_char_check(const ca_char_t c) {
     static_assert(check_type == ca_char_check_types::CA_ISALPHA ||
                   check_type == ca_char_check_types::CA_ISDIGIT ||
                   check_type == ca_char_check_types::CA_ISSPACE ||
