@@ -9,5 +9,6 @@
 #define CA_MATH_H
 
 #include "ca_int.h"
+#include "ca_math_func.h"
 
 #endif //CA_MATH_H

@@ -62,24 +62,6 @@ struct ca_buffer {
     inline ca_buffer(ca_char_t *buf_, ca_size_t size);
 
     /**
-     * @brief Counts the number of codepoints in the buffer based on the encoding type.
-     *
-     * This function analyzes the internal buffer and determines the number of Unicode
-     * codepoints it contains. The count is dependent on the encoding type (ASCII, UTF-8,
-     * UTF-32). The function assumes that the buffer is correctly encoded, and
-     * it uses the specified encoding type to interpret the data.
-     *
-     * For example, in UTF-8 encoding, a codepoint can take between 1 and 4 bytes,
-     * depending on the specific character, while in UTF-32 encoding, a codepoint is
-     * typically represented by 4 bytes.
-     *
-     * @return The number of codepoints in the buffer. This value is computed based
-     *         on the encoding and may vary depending on how the data is stored and interpreted.
-     */
-    [[nodiscard]] inline ca_size_t
-    num_codepoints() const;
-
-    /**
      * @brief Increment the buffer pointer by a specified number of positions.
      *
      * @param n The number of positions to move.
@@ -132,6 +114,98 @@ struct ca_buffer {
     operator --(int);
 
     /**
+     * @brief Moves the buffer forward by a specified number of elements.
+     *
+     * @param n The number of elements to move forward.
+     *
+     * @return A new `Buffer<enc>` at the updated position.
+     */
+    inline ca_buffer<encoding>
+    operator +(ca_int64_t n);
+
+    /**
+     * @brief Moves the buffer backward by a specified number of elements.
+     *
+     * @param n The number of elements to move backward.
+     *
+     * @return A new `Buffer<enc>` at the updated position.
+     */
+    inline ca_buffer<encoding>
+    operator -(ca_int64_t n);
+
+    /**
+     * @brief Computes the difference between two buffers.
+     *
+     * This function returns the difference in bytes for UTF-8
+     * buffers, and the difference in characters for ASCII and UTF-32
+     * buffers.
+     *
+     * @param other The other buffer to compare.
+     *
+     * @return The difference between the two buffers in bytes for
+     *         UTF-8 and in characters for ASCII and UTF-32.
+     *
+     * @note For UTF-8 strings, the result is only meaningful if
+     *       both buffers originate from the same string.
+     */
+    inline ca_ssize_t
+    operator -(ca_buffer<encoding> const &other) const;
+
+    /**
+     * @brief Checks if two buffers are equal.
+     *
+     * @param other The buffer to compare with.
+     * @return True if the buffers are equal, false otherwise.
+     */
+    inline bool
+    operator ==(ca_buffer<encoding> const &other) const;
+
+    /**
+     * @brief Checks if two buffers are not equal.
+     *
+     * @param other The buffer to compare with.
+     * @return True if the buffers are not equal, false otherwise.
+     */
+    inline bool
+    operator !=(ca_buffer<encoding> const &other) const;
+
+    /**
+     * @brief Checks if the current buffer is less than the other buffer.
+     *
+     * @param other The buffer to compare with.
+     * @return True if the current buffer is less than the other, false otherwise.
+     */
+    inline bool
+    operator <(ca_buffer<encoding> const &other) const;
+
+    /**
+     * @brief Checks if the current buffer is greater than the other buffer.
+     *
+     * @param other The buffer to compare with.
+     * @return True if the current buffer is greater than the other, false otherwise.
+     */
+    inline bool
+    operator >(ca_buffer<encoding> const &other) const;
+
+    /**
+     * @brief Checks if the current buffer is less than or equal to the other buffer.
+     *
+     * @param other The buffer to compare with.
+     * @return True if the current buffer is less than or equal to the other, false otherwise.
+     */
+    inline bool
+    operator <=(ca_buffer<encoding> const &other) const;
+
+    /**
+     * @brief Checks if the current buffer is greater than or equal to the other buffer.
+     *
+     * @param other The buffer to compare with.
+     * @return True if the current buffer is greater than or equal to the other, false otherwise.
+     */
+    inline bool
+    operator >=(ca_buffer<encoding> const &other) const;
+
+    /**
      * @brief Dereference the buffer to access the current codepoint.
      *
      * @return The current codepoint.
@@ -147,56 +221,22 @@ struct ca_buffer {
     empty() const;
 
     /**
-     * @brief Compare memory of two buffers.
+     * @brief Counts the number of codepoints in the buffer based on the encoding type.
      *
-     * @param other The buffer to compare with.
-     * @param len The number of bytes to compare:
-     *            - For ASCII and UTF8, this is the number of bytes.
-     *            - For UTF32, this is the number of characters.
+     * This function analyzes the internal buffer and determines the number of Unicode
+     * codepoints it contains. The count is dependent on the encoding type (ASCII, UTF-8,
+     * UTF-32). The function assumes that the buffer is correctly encoded, and
+     * it uses the specified encoding type to interpret the data.
      *
-     * @return A negative value if the first buffer is less than the second,
-     *         zero if they are equal, or a positive value if the first
-     *         buffer is greater.
+     * For example, in UTF-8 encoding, a codepoint can take between 1 and 4 bytes,
+     * depending on the specific character, while in UTF-32 encoding, a codepoint is
+     * typically represented by 4 bytes.
+     *
+     * @return The number of codepoints in the buffer. This value is computed based
+     *         on the encoding and may vary depending on how the data is stored and interpreted.
      */
-    inline int
-    buffer_memcmp(ca_buffer<encoding> other, ca_size_t len) const;
-
-    /**
-     * @brief Copy memory from self to another buffer.
-     *
-     * @param other The destination buffer.
-     * @param len The number of characters to copy:
-     *            - For ASCII and UTF8, this is the number of bytes.
-     *            - For UTF32, this is the number of characters.
-     */
-    inline void
-    buffer_memcpy(ca_buffer<encoding> other, ca_size_t len) const;
-
-    /**
-     * @brief Set a range of memory in the buffer to a specific character.
-     *
-     * @param fill_char The character to fill the buffer with.
-     * @param n_chars The number of characters to set.
-     *
-     * @return The len of characters set in the buffer.
-     *
-     * @note len:
-     *       - For ASCII and UTF8, this is the number of bytes.
-     *       - For UTF32, this is the number of characters.
-     */
-    inline ca_size_t
-    buffer_memset(ca_char4_t fill_char, ca_size_t n_chars);
-
-    /**
-     * @brief Fill the buffer with zeros starting from a specified index.
-     *
-     * This method fills the buffer with zero bytes starting from the specified
-     * index (`start_index`) to the end of the buffer.
-     *
-     * @param start_index The index from which to start filling with zeros.
-     */
-    inline void
-    buffer_fill_with_zeros_after_index(size_t start_index);
+    [[nodiscard]] inline ca_size_t
+    num_codepoints() const;
 
     /**
      * @brief Advance the buffer pointer by a specified number of characters or bytes.
@@ -330,6 +370,58 @@ struct ca_buffer {
     isnumeric() const;
 
     /**
+     * @brief Compare memory of two buffers.
+     *
+     * @param other The buffer to compare with.
+     * @param len The number of bytes to compare:
+     *            - For ASCII and UTF8, this is the number of bytes.
+     *            - For UTF32, this is the number of characters.
+     *
+     * @return A negative value if the first buffer is less than the second,
+     *         zero if they are equal, or a positive value if the first
+     *         buffer is greater.
+     */
+    inline int
+    buffer_memcmp(ca_buffer<encoding> other, ca_size_t len) const;
+
+    /**
+     * @brief Copy memory from self to another buffer.
+     *
+     * @param other The destination buffer.
+     * @param len The number of characters to copy:
+     *            - For ASCII and UTF8, this is the number of bytes.
+     *            - For UTF32, this is the number of characters.
+     */
+    inline void
+    buffer_memcpy(ca_buffer<encoding> other, ca_size_t len) const;
+
+    /**
+     * @brief Set a range of memory in the buffer to a specific character.
+     *
+     * @param fill_char The character to fill the buffer with.
+     * @param n_chars The number of characters to set.
+     *
+     * @return The len of characters set in the buffer.
+     *
+     * @note len:
+     *       - For ASCII and UTF8, this is the number of bytes.
+     *       - For UTF32, this is the number of characters.
+     */
+    inline ca_size_t
+    buffer_memset(ca_char4_t fill_char, ca_size_t n_chars);
+
+    /**
+     * @brief Fill the buffer with zeros starting from a specified index.
+     *
+     * This method fills the buffer with zero bytes starting from the specified
+     * index (`start_index`) to the end of the buffer.
+     *
+     * @param start_index The index from which to start filling with zeros.
+     */
+    inline void
+    buffer_fill_with_zeros_after_index(size_t start_index);
+
+    /**
      * @brief Remove trailing whitespace and null characters from the buffer.
      *
      * This function modifies the buffer by removing any trailing whitespace characters
@@ -359,7 +451,6 @@ struct ca_buffer {
      */
     inline int
     strcmp(ca_buffer<encoding> other, bool ignore_trailing_whitespace = false) const;
-
 };
 
 }

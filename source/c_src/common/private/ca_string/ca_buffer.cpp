@@ -7,14 +7,13 @@
 //        buffer management, memory operations, character checks, and comparison.
 // ================================
 
-#include "cstring"
 
 #include "ca_buffer.h"
-
-#include <algorithm>
-
 #include "ca_char.h"
 #include "ca_utf8_utils.h"
+
+#include <algorithm>
+#include <cstring>
 
 namespace ca::ca_string {
 
@@ -97,34 +96,6 @@ ca_buffer<encoding>::ca_buffer(ca_char_t *buf_, const ca_size_t size) {
 }
 
 template<ca_encoding_t encoding>
-inline ca_size_t
-ca_buffer<encoding>::num_codepoints() const {
-    ca_buffer<encoding> tmp(after, 0);
-    ca_size_t num_codepoints;
-
-    switch (encoding) {
-        case ca_encoding_t::CA_ENCODING_ASCII:
-        case ca_encoding_t::CA_ENCODING_UTF32:
-        {
-            --tmp;
-            while (tmp >= *this && *tmp == '\0') {
-                --tmp;
-            }
-            num_codepoints = static_cast<ca_size_t>(tmp - *this + 1);
-            break;
-        }
-        case ca_encoding_t::CA_ENCODING_UTF8:
-        {
-            utf8::num_codepoints_for_utf8_bytes_without_check(
-                    buf, after - buf, &num_codepoints);
-            break;
-        }
-    }
-
-    return num_codepoints;
-}
-
-template<ca_encoding_t encoding>
 inline ca_buffer<encoding> &
 ca_buffer<encoding>::operator+=(const ca_int64_t n) {
     switch (encoding) {
@@ -203,6 +174,76 @@ ca_buffer<encoding>::operator--(int) {
 }
 
 template<ca_encoding_t encoding>
+inline ca_buffer<encoding>
+ca_buffer<encoding>::operator+(ca_int64_t n) {
+    ca_buffer<encoding> tmp = *this;
+    tmp += n;
+    return tmp;
+}
+
+template<ca_encoding_t encoding>
+inline ca_buffer<encoding>
+ca_buffer<encoding>::operator-(ca_int64_t n) {
+    ca_buffer<encoding> tmp = *this;
+    tmp -= n;
+    return tmp;
+}
+
+template<ca_encoding_t encoding>
+inline ca_ssize_t
+ca_buffer<encoding>::operator-(ca_buffer<encoding> const &other) const {
+    switch (encoding) {
+    case ca_encoding_t::CA_ENCODING_ASCII:
+    case ca_encoding_t::CA_ENCODING_UTF8:
+    {
+        return (buf - other.buf);
+    }
+    case ca_encoding_t::CA_ENCODING_UTF32:
+    {
+        return (buf - other.buf) / sizeof(ca_char4_t);
+    }
+    }
+
+    return 0;
+}
+
+template<ca_encoding_t encoding>
+inline bool
+ca_buffer<encoding>::operator==(ca_buffer<encoding> const &other) const {
+    return buf == other.buf;
+}
+
+template<ca_encoding_t encoding>
+inline bool
+ca_buffer<encoding>::operator!=(ca_buffer<encoding> const &other) const {
+    return buf != other.buf;
+}
+
+template<ca_encoding_t encoding>
+inline bool
+ca_buffer<encoding>::operator<(ca_buffer<encoding> const &other) const {
+    return buf < other.buf;
+}
+
+template<ca_encoding_t encoding>
+inline bool
+ca_buffer<encoding>::operator>(ca_buffer<encoding> const &other) const {
+    return buf > other.buf;
+}
+
+template<ca_encoding_t encoding>
+inline bool
+ca_buffer<encoding>::operator<=(ca_buffer<encoding> const &other) const {
+    return buf <= other.buf;
+}
+
+template<ca_encoding_t encoding>
+inline bool
+ca_buffer<encoding>::operator>=(ca_buffer<encoding> const &other) const {
+    return buf >= other.buf;
+}
+
+template<ca_encoding_t encoding>
 inline ca_char4_t
 ca_buffer<encoding>::operator*() const {
     int size;
@@ -213,6 +254,187 @@ template<ca_encoding_t encoding>
 inline bool
 ca_buffer<encoding>::empty() const {
     return (buf == nullptr || after == nullptr || buf >= after);
+}
+
+template<ca_encoding_t encoding>
+inline ca_size_t
+ca_buffer<encoding>::num_codepoints() const {
+    ca_buffer<encoding> tmp(after, 0);
+    ca_size_t num_codepoints;
+
+    switch (encoding) {
+    case ca_encoding_t::CA_ENCODING_ASCII:
+    case ca_encoding_t::CA_ENCODING_UTF32:
+    {
+        --tmp;
+        while (tmp >= *this && *tmp == '\0') {
+            --tmp;
+        }
+        num_codepoints = static_cast<ca_size_t>(tmp - *this + 1);
+        break;
+    }
+    case ca_encoding_t::CA_ENCODING_UTF8:
+    {
+        utf8::num_codepoints_for_utf8_bytes_without_check(
+                buf, after - buf, &num_codepoints);
+        break;
+    }
+    }
+
+    return num_codepoints;
+}
+
+template<ca_encoding_t encoding>
+void ca_buffer<encoding>::advance_lens(ca_size_t len) {
+    switch (encoding) {
+        case ca_encoding_t::CA_ENCODING_ASCII:
+        case ca_encoding_t::CA_ENCODING_UTF32:
+        {
+            *this += len;
+            break;
+        }
+        case ca_encoding_t::CA_ENCODING_UTF8:
+        {
+            buf += len;
+            break;
+        }
+    }
+}
+
+template<ca_encoding_t encoding>
+ca_size_t ca_buffer<encoding>::num_bytes_next_character() const {
+    return ca_get_bytes<encoding>(buf);
+}
+
+template<ca_encoding_t encoding>
+template<ca_buffer_implemented_unary_functions unary_type>
+bool ca_buffer<encoding>::unary_loop() const {
+    const size_t num_codepoints1 = num_codepoints();
+
+    if (num_codepoints1 == 0) {
+        return false;
+    }
+
+    ca_buffer<encoding> tmp = *this;
+    call_buffer_member_function<encoding, unary_type, bool> function;
+
+    for (size_t i = 0; i < num_codepoints1; ++i) {
+        if (const bool result = function(tmp); !result) {
+            return false;
+        }
+        ++tmp;
+    }
+
+    return true;
+}
+
+template<ca_encoding_t encoding>
+bool ca_buffer<encoding>::is_alpha() const {
+    return unary_loop<ca_buffer_implemented_unary_functions::ISALPHA>();
+}
+
+template<ca_encoding_t encoding>
+bool ca_buffer<encoding>::is_decimal() const {
+    return unary_loop<ca_buffer_implemented_unary_functions::ISDECIMAL>();
+}
+
+template<ca_encoding_t encoding>
+bool ca_buffer<encoding>::is_digit() const {
+    return unary_loop<ca_buffer_implemented_unary_functions::ISDIGIT>();
+}
+
+template<ca_encoding_t encoding>
+bool ca_buffer<encoding>::first_character_is_space() const {
+    return ca_isspace<encoding>(buf);
+}
+
+template<ca_encoding_t encoding>
+bool ca_buffer<encoding>::is_space() const {
+    return unary_loop<ca_buffer_implemented_unary_functions::ISSPACE>();
+}
+
+template<ca_encoding_t encoding>
+bool ca_buffer<encoding>::is_alphanumeric() const {
+    return unary_loop<ca_buffer_implemented_unary_functions::ISALNUM>();
+}
+
+template<ca_encoding_t encoding>
+bool ca_buffer<encoding>::islower() const {
+    size_t num_codepoints1 = num_codepoints();
+    if (num_codepoints1 == 0) {
+        return false;
+    }
+
+    ca_buffer<encoding> tmp = *this;
+    bool cased = false;
+    for (size_t i = 0; i < num_codepoints1; ++i) {
+        if (ca_isupper<encoding>(*tmp) || ca_istitle<encoding>(*tmp)) {
+            return false;
+        }
+        else if (!cased && ca_islower<encoding>(*tmp)) {
+            cased = true;
+        }
+        ++tmp;
+    }
+    return cased;
+}
+
+template<ca_encoding_t encoding>
+bool ca_buffer<encoding>::isupper() const {
+    const size_t num_codepoints1 = num_codepoints();
+    if (num_codepoints1 == 0) {
+        return false;
+    }
+
+    ca_buffer<encoding> tmp = *this;
+    bool cased = false;
+    for (size_t i = 0; i < num_codepoints1; ++i) {
+        if (ca_islower<encoding>(*tmp) || ca_istitle<encoding>(*tmp)) {
+            return false;
+        }
+        else if (!cased && ca_isupper<encoding>(*tmp)) {
+            cased = true;
+        }
+        ++tmp;
+    }
+    return cased;
+}
+
+template<ca_encoding_t encoding>
+bool ca_buffer<encoding>::istitle() const {
+    const size_t num_codepoints1 = num_codepoints();
+    if (num_codepoints1 == 0) {
+        return false;
+    }
+
+    ca_buffer<encoding> tmp = *this;
+    bool cased = false;
+    bool prev_cased = false;
+    for (size_t i = 0; i < num_codepoints1; ++i) {
+        if (ca_isupper<encoding>(*tmp) || ca_istitle<encoding>(*tmp)) {
+            if (prev_cased) {
+                return false;
+            }
+            prev_cased = true;
+            cased = true;
+        }
+        else if (ca_islower<encoding>(*tmp)) {
+            if (!prev_cased) {
+                return false;
+            }
+            cased = true;
+        }
+        else {
+            prev_cased = false;
+        }
+        ++tmp;
+    }
+    return cased;
+}
+
+template<ca_encoding_t encoding>
+bool ca_buffer<encoding>::isnumeric() const {
+    return unary_loop<ca_buffer_implemented_unary_functions::ISNUMERIC>();
 }
 
 template<ca_encoding_t encoding>
@@ -259,6 +481,7 @@ ca_buffer<encoding>::buffer_memcpy(ca_buffer<encoding> other, const ca_size_t le
 
 template<ca_encoding_t encoding>
 inline ca_size_t
+// ReSharper disable once CppMemberFunctionMayBeConst
 ca_buffer<encoding>::buffer_memset(const ca_char4_t fill_char, const ca_size_t n_chars) {
     if (n_chars == 0) {
         return 0;
@@ -319,159 +542,6 @@ template<ca_encoding_t encoding>
 void ca_buffer<encoding>::buffer_fill_with_zeros_after_index(size_t start_index) {
     ca_buffer<encoding> tmp = *this + start_index;
     std::fill(tmp.buf, after, 0);
-}
-
-template<ca_encoding_t encoding>
-void ca_buffer<encoding>::advance_lens(ca_size_t len) {
-    switch (encoding) {
-    case ca_encoding_t::CA_ENCODING_ASCII:
-    case ca_encoding_t::CA_ENCODING_UTF32:
-    {
-        *this += len;
-        break;
-    }
-    case ca_encoding_t::CA_ENCODING_UTF8:
-    {
-        buf += len;
-        break;
-    }
-    }
-}
-
-template<ca_encoding_t encoding>
-ca_size_t ca_buffer<encoding>::num_bytes_next_character() const {
-    return ca_get_bytes<encoding>(buf);
-}
-
-template<ca_encoding_t encoding>
-template<ca_buffer_implemented_unary_functions unary_type>
-bool ca_buffer<encoding>::unary_loop() const {
-    size_t num_codepoints = num_codepoints();
-
-    if (num_codepoints == 0) {
-        return false;
-    }
-
-    ca_buffer<encoding> tmp = *this;
-    call_buffer_member_function<encoding, unary_type, bool> function;
-
-    for (size_t i = 0; i < num_codepoints; ++i) {
-        if (const bool result = function(tmp); !result) {
-            return false;
-        }
-        ++tmp;
-    }
-
-    return true;
-}
-
-template<ca_encoding_t encoding>
-bool ca_buffer<encoding>::is_alpha() const {
-    return unary_loop<ca_buffer_implemented_unary_functions::ISALPHA>();
-}
-
-template<ca_encoding_t encoding>
-bool ca_buffer<encoding>::is_decimal() const {
-    return unary_loop<ca_buffer_implemented_unary_functions::ISDECIMAL>();
-}
-
-template<ca_encoding_t encoding>
-bool ca_buffer<encoding>::is_digit() const {
-    return unary_loop<ca_buffer_implemented_unary_functions::ISDIGIT>();
-}
-
-template<ca_encoding_t encoding>
-bool ca_buffer<encoding>::first_character_is_space() const {
-    return ca_isspace<encoding>(buf);
-}
-
-template<ca_encoding_t encoding>
-bool ca_buffer<encoding>::is_space() const {
-    return unary_loop<ca_buffer_implemented_unary_functions::ISSPACE>();
-}
-
-template<ca_encoding_t encoding>
-bool ca_buffer<encoding>::is_alphanumeric() const {
-    return unary_loop<ca_buffer_implemented_unary_functions::ISALNUM>();
-}
-
-template<ca_encoding_t encoding>
-bool ca_buffer<encoding>::islower() const {
-    size_t num_codepoints = num_codepoints();
-    if (num_codepoints == 0) {
-        return false;
-    }
-
-    ca_buffer<encoding> tmp = *this;
-    bool cased = false;
-    for (size_t i = 0; i < num_codepoints; ++i) {
-        if (ca_isupper<encoding>(*tmp) || ca_istitle<encoding>(*tmp)) {
-            return false;
-        }
-        else if (!cased && ca_islower<encoding>(*tmp)) {
-            cased = true;
-        }
-        ++tmp;
-    }
-    return cased;
-}
-
-template<ca_encoding_t encoding>
-bool ca_buffer<encoding>::isupper() const {
-    size_t num_codepoints = num_codepoints();
-    if (num_codepoints == 0) {
-        return false;
-    }
-
-    ca_buffer<encoding> tmp = *this;
-    bool cased = false;
-    for (size_t i = 0; i < num_codepoints; ++i) {
-        if (ca_islower<encoding>(*tmp) || ca_istitle<encoding>(*tmp)) {
-            return false;
-        }
-        else if (!cased && ca_isupper<encoding>(*tmp)) {
-            cased = true;
-        }
-        ++tmp;
-    }
-    return cased;
-}
-
-template<ca_encoding_t encoding>
-bool ca_buffer<encoding>::istitle() const {
-    size_t num_codepoints = num_codepoints();
-    if (num_codepoints == 0) {
-        return false;
-    }
-
-    ca_buffer<encoding> tmp = *this;
-    bool cased = false;
-    bool prev_cased = false;
-    for (size_t i = 0; i < num_codepoints; ++i) {
-        if (ca_isupper<encoding>(*tmp) || ca_istitle<encoding>(*tmp)) {
-            if (prev_cased) {
-                return false;
-            }
-            prev_cased = true;
-            cased = true;
-        }
-        else if (ca_islower<encoding>(*tmp)) {
-            if (!prev_cased) {
-                return false;
-            }
-            cased = true;
-        }
-        else {
-            prev_cased = false;
-        }
-        ++tmp;
-    }
-    return cased;
-}
-
-template<ca_encoding_t encoding>
-bool ca_buffer<encoding>::isnumeric() const {
-    return unary_loop<ca_buffer_implemented_unary_functions::ISNUMERIC>();
 }
 
 template<ca_encoding_t encoding>

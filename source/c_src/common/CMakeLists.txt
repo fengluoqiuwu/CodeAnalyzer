@@ -9,12 +9,14 @@
 # ================================
 # Collect Math Library sources
 set(CA_MATH_SOURCES
+        private/ca_math/ca_math_func.cpp
         private/ca_math/temp.cpp
 )
 
 # Collect Math Library headers to be installed
 set(CA_MATH_PUBLIC_HEADERS
         public/ca_math/ca_math.h
+        public/ca_math/ca_math_func.h
         public/ca_math/ca_int.h
 )
 
@@ -34,6 +36,7 @@ target_include_directories(ca_math
 set(CA_STRING_SOURCES
         private/ca_string/ca_buffer.cpp
         private/ca_string/ca_char.cpp
+        private/ca_string/ca_fastsearch.cpp
         private/ca_string/ca_stream.cpp
         private/ca_string/ca_utf8_utils.cpp
 )
@@ -42,6 +45,8 @@ set(CA_STRING_SOURCES
 set(CA_STRING_PUBLIC_HEADERS
         public/ca_string/ca_buffer.h
         public/ca_string/ca_char.h
+        public/ca_string/ca_char_types.h
+        public/ca_string/ca_fastsearch.h
         public/ca_string/ca_stream.h
         public/ca_string/ca_string.h
         public/ca_string/ca_utf8_utils.h
