@@ -22,3 +22,6 @@
 [submodule "source/third_party/googletest"]
 	path = source/third_party/googletest
 	url = https://github.com/google/googletest.git
+[submodule "source/third_party/utf8proc"]
+	path = source/third_party/utf8proc
+	url = https://github.com/JuliaStrings/utf8proc.git

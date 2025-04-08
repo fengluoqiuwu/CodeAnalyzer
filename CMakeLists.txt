@@ -5,10 +5,28 @@ project(CodeAnalyzer VERSION 0.1.0 LANGUAGES C CXX)
 # ✅ Standard
 # ----------------------------
 
-set(CMAKE_C_STANDARD 23)
-set(CMAKE_C_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+if (MSVC)
+    # Set C standard to C17
+    set(CMAKE_C_STANDARD 17)
+    set(CMAKE_C_STANDARD_REQUIRED ON)
+    # Set C++ standard to C++20
+    set(CMAKE_CXX_STANDARD 20)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+else()
+    # Set C standard to C23
+    set(CMAKE_C_STANDARD 23)
+    set(CMAKE_C_STANDARD_REQUIRED ON)
+    # Set C++ standard to C++23
+    set(CMAKE_CXX_STANDARD 23)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+endif()
+
+set(CMAKE_C_EXTENSIONS OFF)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Display the standards being used
+message(STATUS "Using C standard: ${CMAKE_C_STANDARD}")
+message(STATUS "Using C++ standard: ${CMAKE_CXX_STANDARD}")
 
 # ----------------------------
 # ✅ Pre setup
@@ -51,17 +69,42 @@ function(ca_test_dir prefix dep dir)
 
         # Create an executable for each test with the name "prefix-{test_name}"
         add_executable(${prefix}-${TEST_NAME} ${TEST_SRC})
+        message("add_executable:" ${prefix}-${TEST_NAME} ${TEST_SRC})
 
         # Link the created test executable to gtest_main and any other dependencies passed via 'dep'
-        target_link_libraries(${prefix}-${TEST_NAME} PUBLIC gtest_main ${dep})
+        target_link_libraries(${prefix}-${TEST_NAME} PRIVATE gtest_main ${dep})
+        message("target_link_libraries:" ${prefix}-${TEST_NAME} PRIVATE gtest_main ${dep})
 
         # Register each test as a CTest test with the name "prefix-{test_name}"
         add_test(NAME ${prefix}-${TEST_NAME} COMMAND ${prefix}-${TEST_NAME})
+        message("add_test:" ${prefix}-${TEST_NAME} COMMAND ${prefix}-${TEST_NAME})
     endforeach()
 
     # Create a super-test with the name "prefix"
     # This super-test will run all individual tests that have the "prefix-" prefix in their names
     add_test(NAME ${prefix} COMMAND ${CMAKE_CTEST_COMMAND} --test-dir ${CMAKE_BINARY_DIR} -R ^${prefix}-)
+endfunction()
+
+# Define the ca_test function
+# `prefix` is the prefix for each test name
+# `list` is the list of test names and their dependencies:
+# - "test_name" for a test with no other dependencies
+# - "test_name:"dep1 dep2"" for a test with other dependencies
+# The function threat direction as "test_name"
+function(ca_test prefix list)
+    foreach (TEST_INFO ${list})
+        string(FIND ${TEST_INFO} ":" TEST_NAME_POS)
+        if(TEST_NAME_POS EQUAL -1)
+            set(TEST_NAME ${TEST_INFO})
+            set(DEP_NAME ${TEST_INFO})
+        else()
+            string(REPLACE ":" ";" DEP_NAME "${TEST_INFO}")
+            list(GET DEP_NAME 0 TEST_NAME)
+        endif()
+        ca_test_dir(${prefix}-${TEST_NAME} "${DEP_NAME}" ${TEST_NAME})
+    endforeach()
+
+    ca_test_combine(${prefix})
 endfunction()
 
 # ----------------------------
@@ -138,8 +181,10 @@ include(CheckCXXCompilerFlag)
 check_c_compiler_flag("-I${Python3_INCLUDE_DIRS}" HAS_PYTHON_H_C)
 check_cxx_compiler_flag("-I${Python3_INCLUDE_DIRS}" HAS_PYTHON_H_CPP)
 
-if(NOT HAS_PYTHON_H_C)
-    message(FATAL_ERROR "❌ Missing Python.h for C compiler. Please install python-dev / python-devel")
+if(NOT MSVC)
+    if(NOT HAS_PYTHON_H_C)
+        message(FATAL_ERROR "❌ Missing Python.h for C compiler. Please install python-dev / python-devel")
+    endif()
 endif()
 
 if(NOT HAS_PYTHON_H_CPP)

@@ -455,4 +455,6 @@ struct ca_buffer {
 
 }
 
+#include "../../private/ca_string/ca_buffer.tpp"
+
 #endif //CA_BUFFER_H

@@ -1,11 +1,13 @@
 // ================================
-// CodeAnalyzer - source/c_src/common/private/ca_string/ca_fastsearch.cpp
+// CodeAnalyzer - source/c_src/common/private/ca_string/ca_fastsearch.tpp
 //
 // @file
-// @brief
+// @brief Implements the fast pattern searching and counting algorithms,
+//        including bloom filter optimizations and the Two-Way string matching
+//        algorithm.
 // ================================
+#pragma once
 
-#include "ca_fastsearch.h"
 #include "ca_math.h"
 
 #include <cassert>

@@ -1,14 +1,13 @@
 // ================================
-// CodeAnalyzer - source/c_src/common/private/ca_string/ca_string.h
+// CodeAnalyzer - source/c_src/common/private/ca_string/ca_buffer.tpp
 //
 // @file
 // @brief Implements the `ca_buffer` template class for character buffer manipulation
 //        across different encodings (ASCII, UTF-8, UTF-32). Includes methods for
 //        buffer management, memory operations, character checks, and comparison.
 // ================================
+#pragma once
 
-
-#include "ca_buffer.h"
 #include "ca_char.h"
 #include "ca_utf8_utils.h"
 
@@ -17,7 +16,6 @@
 
 namespace ca::ca_string {
 
-namespace {
 /**
  * @brief A functor for calling specific unary buffer functions based on the specified operation.
  *
@@ -75,7 +73,6 @@ struct call_buffer_member_function {
         }
     }
 };
-}
 
 // ----------------------------
 // Member function implementations of ca_buffer

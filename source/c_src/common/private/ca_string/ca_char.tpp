@@ -1,13 +1,18 @@
 // ================================
-// CodeAnalyzer - source/c_src/common/public/ca_string/ca_char.cpp
+// CodeAnalyzer - source/c_src/common/public/ca_string/ca_char.tpp
 //
 // @file
 // @brief Source file implementing functions for character types and encoding/decoding
 //        operations, including utility functions for character classification.
 // ================================
+#pragma once
+
+extern "C" {
+#define UTF8PROC_STATIC
+#include "../../utf8proc/utf8proc.h"
+}
 
 #include <Python.h>
-#include "ca_char.h"
 #include "ca_utf8_utils.h"
 
 namespace ca::ca_string {
@@ -92,13 +97,23 @@ ca_isalpha<ca_encoding_t::CA_ENCODING_ASCII>(const ca_char4_t c) {
 template <>
 inline bool
 ca_isalpha<ca_encoding_t::CA_ENCODING_UTF8>(const ca_char4_t c) {
-    return Py_UNICODE_ISALPHA(c);
+    const utf8proc_category_t cat = utf8proc_category(static_cast<utf8proc_int32_t>(c));
+    return (cat == UTF8PROC_CATEGORY_LU ||
+            cat == UTF8PROC_CATEGORY_LL ||
+            cat == UTF8PROC_CATEGORY_LT ||
+            cat == UTF8PROC_CATEGORY_LM ||
+            cat == UTF8PROC_CATEGORY_LO);
 }
 
 template <>
 inline bool
 ca_isalpha<ca_encoding_t::CA_ENCODING_UTF32>(const ca_char4_t c) {
-    return Py_UNICODE_ISALPHA(c);
+    const utf8proc_category_t cat = utf8proc_category(static_cast<utf8proc_int32_t>(c));
+    return (cat == UTF8PROC_CATEGORY_LU ||
+            cat == UTF8PROC_CATEGORY_LL ||
+            cat == UTF8PROC_CATEGORY_LT ||
+            cat == UTF8PROC_CATEGORY_LM ||
+            cat == UTF8PROC_CATEGORY_LO);
 }
 
 template <ca_encoding_t encoding>
@@ -122,13 +137,45 @@ ca_isdigit<ca_encoding_t::CA_ENCODING_ASCII>(const ca_char4_t c) {
 template <>
 inline bool
 ca_isdigit<ca_encoding_t::CA_ENCODING_UTF8>(const ca_char4_t c) {
-    return Py_UNICODE_ISDIGIT(c);
+    if (utf8proc_category(static_cast<utf8proc_int32_t>(c)) == UTF8PROC_CATEGORY_ND) {
+        return true;
+    }
+
+    switch (c) {
+        case 0x00B2: // ²
+        case 0x00B3: // ³
+        case 0x00B9: // ¹
+        case 0x1369: case 0x136A: case 0x136B: case 0x136C: case 0x136D:
+        case 0x136E: case 0x136F: case 0x1370: case 0x1371: // Ethiopic digits 1-9
+        case 0x2460 ... 0x2468: // Circled numbers 1-9
+        case 0x2474 ... 0x247C: // Parenthesized digits 1-9
+        case 0x2488 ... 0x2490: // Fullwidth circled 1-9
+            return true;
+        default:
+            return false;
+    }
 }
 
 template <>
 inline bool
 ca_isdigit<ca_encoding_t::CA_ENCODING_UTF32>(const ca_char4_t c) {
-    return Py_UNICODE_ISDIGIT(c);
+    if (utf8proc_category(static_cast<utf8proc_int32_t>(c)) == UTF8PROC_CATEGORY_ND) {
+        return true;
+    }
+
+    switch (c) {
+        case 0x00B2: // ²
+        case 0x00B3: // ³
+        case 0x00B9: // ¹
+        case 0x1369: case 0x136A: case 0x136B: case 0x136C: case 0x136D:
+        case 0x136E: case 0x136F: case 0x1370: case 0x1371: // Ethiopic digits 1-9
+        case 0x2460 ... 0x2468: // Circled numbers 1-9
+        case 0x2474 ... 0x247C: // Parenthesized digits 1-9
+        case 0x2488 ... 0x2490: // Fullwidth circled 1-9
+            return true;
+        default:
+            return false;
+    }
 }
 
 template <ca_encoding_t encoding>
@@ -152,13 +199,39 @@ ca_isspace<ca_encoding_t::CA_ENCODING_ASCII>(const ca_char4_t c) {
 template <>
 inline bool
 ca_isspace<ca_encoding_t::CA_ENCODING_UTF8>(const ca_char4_t c) {
-    return Py_UNICODE_ISSPACE(c);
+    // ASCII / Latin-1 whitespace
+    if (c == 0x0009 || c == 0x000A || c == 0x000B || c == 0x000C ||
+        c == 0x000D || c == 0x0020 || c == 0x0085 || c == 0x00A0)
+        return true;
+
+    // Unicode white space blocks
+    if (c == 0x1680 || c == 0x180E || c == 0x2000 || c == 0x2001 ||
+        c == 0x2002 || c == 0x2003 || c == 0x2004 || c == 0x2005 ||
+        c == 0x2006 || c == 0x2007 || c == 0x2008 || c == 0x2009 ||
+        c == 0x200A || c == 0x2028 || c == 0x2029 || c == 0x202F ||
+        c == 0x205F || c == 0x3000)
+        return true;
+
+    return false;
 }
 
 template <>
 inline bool
 ca_isspace<ca_encoding_t::CA_ENCODING_UTF32>(const ca_char4_t c) {
-    return Py_UNICODE_ISSPACE(c);
+    // ASCII / Latin-1 whitespace
+    if (c == 0x0009 || c == 0x000A || c == 0x000B || c == 0x000C ||
+        c == 0x000D || c == 0x0020 || c == 0x0085 || c == 0x00A0)
+        return true;
+
+    // Unicode white space blocks
+    if (c == 0x1680 || c == 0x180E || c == 0x2000 || c == 0x2001 ||
+        c == 0x2002 || c == 0x2003 || c == 0x2004 || c == 0x2005 ||
+        c == 0x2006 || c == 0x2007 || c == 0x2008 || c == 0x2009 ||
+        c == 0x200A || c == 0x2028 || c == 0x2029 || c == 0x202F ||
+        c == 0x205F || c == 0x3000)
+        return true;
+
+    return false;
 }
 
 template <ca_encoding_t encoding>
@@ -182,13 +255,13 @@ ca_isalnum<ca_encoding_t::CA_ENCODING_ASCII>(const ca_char4_t c) {
 template <>
 inline bool
 ca_isalnum<ca_encoding_t::CA_ENCODING_UTF8>(const ca_char4_t c) {
-    return Py_UNICODE_ISALNUM(c);
+    return ca_isalpha<ca_encoding_t::CA_ENCODING_UTF8>(c) || ca_isdigit<ca_encoding_t::CA_ENCODING_UTF8>(c);
 }
 
 template <>
 inline bool
 ca_isalnum<ca_encoding_t::CA_ENCODING_UTF32>(const ca_char4_t c) {
-    return Py_UNICODE_ISALNUM(c);
+    return ca_isalpha<ca_encoding_t::CA_ENCODING_UTF32>(c) || ca_isdigit<ca_encoding_t::CA_ENCODING_UTF8>(c);
 }
 
 template <ca_encoding_t encoding>
@@ -212,13 +285,13 @@ ca_islower<ca_encoding_t::CA_ENCODING_ASCII>(const ca_char4_t c) {
 template <>
 inline bool
 ca_islower<ca_encoding_t::CA_ENCODING_UTF8>(const ca_char4_t c) {
-    return Py_UNICODE_ISLOWER(c);
+    return utf8proc_category(static_cast<utf8proc_int32_t>(c)) == UTF8PROC_CATEGORY_LL;
 }
 
 template <>
 inline bool
 ca_islower<ca_encoding_t::CA_ENCODING_UTF32>(const ca_char4_t c) {
-    return Py_UNICODE_ISLOWER(c);
+    return utf8proc_category(static_cast<utf8proc_int32_t>(c)) == UTF8PROC_CATEGORY_LL;
 }
 
 template <ca_encoding_t encoding>
@@ -242,13 +315,13 @@ ca_isupper<ca_encoding_t::CA_ENCODING_ASCII>(const ca_char4_t c) {
 template <>
 inline bool
 ca_isupper<ca_encoding_t::CA_ENCODING_UTF8>(const ca_char4_t c) {
-    return Py_UNICODE_ISUPPER(c);
+    return utf8proc_category(static_cast<utf8proc_int32_t>(c)) == UTF8PROC_CATEGORY_LU;
 }
 
 template <>
 inline bool
 ca_isupper<ca_encoding_t::CA_ENCODING_UTF32>(const ca_char4_t c) {
-    return Py_UNICODE_ISUPPER(c);
+    return utf8proc_category(static_cast<utf8proc_int32_t>(c)) == UTF8PROC_CATEGORY_LU;
 }
 
 template <ca_encoding_t encoding>
@@ -272,13 +345,13 @@ ca_istitle<ca_encoding_t::CA_ENCODING_ASCII>(const ca_char4_t c) {
 template <>
 inline bool
 ca_istitle<ca_encoding_t::CA_ENCODING_UTF8>(const ca_char4_t c) {
-    return Py_UNICODE_ISTITLE(c);
+    return utf8proc_category(static_cast<utf8proc_int32_t>(c)) == UTF8PROC_CATEGORY_LT;
 }
 
 template <>
 inline bool
 ca_istitle<ca_encoding_t::CA_ENCODING_UTF32>(const ca_char4_t c) {
-    return Py_UNICODE_ISTITLE(c);
+    return utf8proc_category(static_cast<utf8proc_int32_t>(c)) == UTF8PROC_CATEGORY_LT;
 }
 
 template <ca_encoding_t encoding>
@@ -296,19 +369,28 @@ ca_istitle(const ca_char4_t c) {
 template <>
 inline bool
 ca_isnumeric<ca_encoding_t::CA_ENCODING_ASCII>(const ca_char4_t c) {
-    return Py_UNICODE_ISNUMERIC(c);
+    utf8proc_category_t cat = utf8proc_category(static_cast<utf8proc_int32_t>(c));
+    return cat == UTF8PROC_CATEGORY_ND ||
+           cat == UTF8PROC_CATEGORY_NL ||
+           cat == UTF8PROC_CATEGORY_NO;
 }
 
 template <>
 inline bool
 ca_isnumeric<ca_encoding_t::CA_ENCODING_UTF8>(const ca_char4_t c) {
-    return Py_UNICODE_ISNUMERIC(c);
+    utf8proc_category_t cat = utf8proc_category(static_cast<utf8proc_int32_t>(c));
+    return cat == UTF8PROC_CATEGORY_ND ||
+           cat == UTF8PROC_CATEGORY_NL ||
+           cat == UTF8PROC_CATEGORY_NO;
 }
 
 template <>
 inline bool
 ca_isnumeric<ca_encoding_t::CA_ENCODING_UTF32>(const ca_char4_t c) {
-    return Py_UNICODE_ISNUMERIC(c);
+    utf8proc_category_t cat = utf8proc_category(static_cast<utf8proc_int32_t>(c));
+    return cat == UTF8PROC_CATEGORY_ND ||
+           cat == UTF8PROC_CATEGORY_NL ||
+           cat == UTF8PROC_CATEGORY_NO;
 }
 
 template <ca_encoding_t encoding>
@@ -326,19 +408,19 @@ ca_isnumeric(const ca_char4_t c) {
 template <>
 inline bool
 ca_isdecimal<ca_encoding_t::CA_ENCODING_ASCII>(const ca_char4_t c) {
-    return Py_UNICODE_ISDECIMAL(c);
+    return utf8proc_category(static_cast<utf8proc_int32_t>(c)) == UTF8PROC_CATEGORY_ND;
 }
 
 template <>
 inline bool
 ca_isdecimal<ca_encoding_t::CA_ENCODING_UTF8>(const ca_char4_t c) {
-    return Py_UNICODE_ISDECIMAL(c);
+    return utf8proc_category(static_cast<utf8proc_int32_t>(c)) == UTF8PROC_CATEGORY_ND;
 }
 
 template <>
 inline bool
 ca_isdecimal<ca_encoding_t::CA_ENCODING_UTF32>(const ca_char4_t c) {
-    return Py_UNICODE_ISDECIMAL(c);
+    return utf8proc_category(static_cast<utf8proc_int32_t>(c)) == UTF8PROC_CATEGORY_ND;
 }
 
 template <ca_encoding_t encoding>

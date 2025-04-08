@@ -136,7 +136,7 @@ num_codepoints_for_utf8_bytes(
 int
 utf8_buffer_size(
         const ca_char_t *buf, ca_size_t max_bytes,
-        ca_size_t utf8_bytes);
+        ca_size_t *utf8_bytes);
 
 /**
  * @brief Calculates the size in bytes needed to encode UCS-4 code points as UTF-8.
@@ -178,7 +178,7 @@ utf8_size_of_utf32_buffer_encode(
  */
 void
 find_previous_utf8_character(
-        const ca_char_t *current, ca_size_t nchar,
+        ca_char_t *current, ca_size_t nchar,
         ca_char_t **previous_loc);
 
 /**

@@ -193,6 +193,9 @@ void
 num_codepoints_for_utf8_bytes_without_check(
         const ca_char_t *buf, const ca_size_t max_bytes,
         ca_size_t *num_codepoints) {
+    assert(buf != nullptr);
+    assert(num_codepoints != nullptr);
+
     ca_size_t bytes_consumed = 0;
     ca_size_t codepoints_count = 0;
 
@@ -210,6 +213,9 @@ int
 num_codepoints_for_utf8_bytes(
         const ca_char_t *buf, ca_size_t max_bytes,
         ca_size_t *num_codepoints) {
+    assert(buf != nullptr);
+    assert(num_codepoints != nullptr);
+
     ca_char4_t codepoint;
 
     ca_uint8_t state = UTF8_ACCEPT;
@@ -249,6 +255,9 @@ int
 utf8_buffer_size(
         const ca_char_t *buf, ca_size_t max_bytes,
         ca_size_t *utf8_bytes) {
+    assert(buf != nullptr);
+    assert(utf8_bytes != nullptr);
+
     ca_char4_t codepoint;
 
     ca_uint8_t state = UTF8_ACCEPT;
@@ -290,6 +299,10 @@ int
 utf8_size_of_utf32_buffer_encode(
         const ca_char4_t *buf_usc4, const ca_size_t buf_length,
         ca_size_t *num_codepoints, ca_size_t *utf8_bytes) {
+    assert(buf_usc4 != nullptr);
+    assert(num_codepoints != nullptr);
+    assert(utf8_bytes != nullptr);
+
     // ucs4_len is now the number of buf_usc4 codepoints that aren't trailing nulls.
     ca_size_t ucs4_len = buf_length;
 
@@ -320,8 +333,8 @@ utf8_size_of_utf32_buffer_encode(
 
 void
 find_previous_utf8_character(
-        const ca_char_t *current, ca_size_t nchar,
-        ca_size_t **previous_loc) {
+        ca_char_t *current, ca_size_t nchar,
+        ca_char_t **previous_loc) {
     assert(current != nullptr);
     assert(previous_loc != nullptr);
 
@@ -332,11 +345,15 @@ find_previous_utf8_character(
         {
             // this assumes well-formed UTF-8 and does not check if we go
             // before the start of the string
-            previous_loc--;
+            current--;
             // the first byte of a UTF8 character either has
             // the topmost bit clear or has both topmost bits set
         } while ((*current & 0xC0) == 0x80);
         nchar--;
+    }
+
+    if (nchar == 0) {
+        *previous_loc = current;
     }
 }
 
@@ -357,26 +374,7 @@ find_start_end_locs(
 
     int match_count = 0;    // Count of locations found
 
-    if (start_index == 0) {
-        *start_loc = buf;
-        match_count += 1;
-    }
-    if (end_index == 0) {
-        *end_loc = buf;
-        match_count += 1;
-    }
-
-    if (match_count >= 2) {
-        return 0;
-    }
-
-    while (bytes_consumed < buffer_size && num_codepoints < end_index) {
-        const ca_size_t num_bytes = num_utf8_bytes_for_utf8_character_without_check(buf);
-
-        num_codepoints += 1;
-        bytes_consumed += num_bytes;
-        buf += num_bytes;
-
+    while (bytes_consumed < buffer_size) {
         if (start_index == num_codepoints) {
             *start_loc = buf;
             match_count += 1;
@@ -391,6 +389,12 @@ find_start_end_locs(
                 return 0;
             }
         }
+
+        const ca_size_t num_bytes = num_utf8_bytes_for_utf8_character_without_check(buf);
+
+        num_codepoints += 1;
+        bytes_consumed += num_bytes;
+        buf += num_bytes;
     }
 
     return -1;

@@ -11,6 +11,9 @@
 
 #include "ca_buffer.h"
 #include "ca_char.h"
+#include "ca_char_types.h"
+#include "ca_fastsearch.h"
 #include "ca_stream.h"
+#include "ca_utf8_utils.h"
 
 #endif //CA_STRING_H

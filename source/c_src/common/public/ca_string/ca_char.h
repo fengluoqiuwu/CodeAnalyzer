@@ -5,7 +5,6 @@
 // @brief Defines core character types and utility functions for encoding-aware
 //        character handling.
 // ================================
-
 #ifndef CA_CHAR_H
 #define CA_CHAR_H
 
@@ -239,5 +238,7 @@ template <ca_encoding_t encoding, ca_char_check_types check_type>
 inline bool
 ca_char_check(ca_char_t c);
 }
+
+#include "../../private/ca_string/ca_char.tpp"
 
 #endif // CA_CHAR_H

@@ -5,14 +5,11 @@
 # ================================
 
 set(COMMON_TEST_LISTS
-        ca_math
-        ca_string
+        "ca_misc"
+        "ca_math"
+        "ca_string:ca_math"
 )
 
 set(COMMON_TEST_PREFIX source-c_src-common)
 
-foreach (TEST_NAME ${COMMON_TEST_LISTS})
-    ca_test_dir(${COMMON_TEST_PREFIX}-${TEST_NAME} ${TEST_NAME} ${TEST_NAME})
-endforeach ()
-
-ca_test_combine(${COMMON_TEST_PREFIX})
+ca_test(${COMMON_TEST_PREFIX} "${COMMON_TEST_LISTS}")

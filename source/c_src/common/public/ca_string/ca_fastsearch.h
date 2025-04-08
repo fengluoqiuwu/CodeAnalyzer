@@ -2,8 +2,8 @@
 // CodeAnalyzer - source/c_src/common/public/ca_string/ca_fastsearch.h
 //
 // @file
-// @brief The `ca_fastsearch.h` file defines two key functions related to
-//        pattern searching and counting occurrences of a pattern within a string.
+// @brief Defines functions and structures for fast pattern searching and
+//        counting occurrences of a pattern within a string.
 // ================================
 
 #ifndef CA_FAST_SEARCH_H
@@ -825,4 +825,7 @@ ca_fastcount(char_type* str, ca_size_t str_len,
              ca_size_t max_count, ca_size_t *count);
 
 }
+
+#include "../../private/ca_string/ca_fastsearch.tpp"
+
 #endif //CA_FAST_SEARCH_H

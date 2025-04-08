@@ -1,46 +1,55 @@
+// ================================
+// CodeAnalyzer - source/c_src/common/public/ca_math/ca_math_func.h
 //
-// Created by Eden_ on 2025/3/31.
-//
+// @file
+// @brief Defines core mathematical functions.
+// ================================
 
 #ifndef CA_MATH_FUNC_H
 #define CA_MATH_FUNC_H
 
-#include "ca_int.h"
-
-#include <cassert>
-#include <limits>
-#include <type_traits>
-
 namespace ca::ca_math {
 
-// Define Py_MAX as a template function
+/**
+ * @brief Returns the maximum of two arithmetic values.
+ *
+ * @tparam T An arithmetic type (e.g., int, float, double).
+ * @param x First value.
+ * @param y Second value.
+ * @return The greater of x and y.
+ */
 template <typename T>
-constexpr T ca_max(T x, T y) {
-    static_assert(std::is_arithmetic<T>::value, "Py_MAX only works with arithmetic types.");
-    return (x > y) ? x : y;
-}
+constexpr T ca_max(T x, T y);
 
-// Define Py_MIN as a template function
+/**
+ * @brief Returns the minimum of two arithmetic values.
+ *
+ * @tparam T An arithmetic type (e.g., int, float, double).
+ * @param x First value.
+ * @param y Second value.
+ * @return The lesser of x and y.
+ */
 template <typename T>
-constexpr T ca_min(T x, T y) {
-    static_assert(std::is_arithmetic<T>::value, "Py_MIN only works with arithmetic types.");
-    return (x < y) ? x : y;
-}
+constexpr T ca_min(T x, T y);
 
+/**
+ * @brief Safely downcasts a wide integer type to a narrower integer type.
+ *
+ * Ensures at runtime (via assert) that the value fits in the target type.
+ *
+ * @tparam Narrow Target (narrower) integer type.
+ * @tparam Wide Source (wider) integer type.
+ * @param value The value to downcast.
+ * @return The downcast value as type Narrow.
+ *
+ * @note This function uses assert, which is only active in debug builds.
+ */
 template <typename Narrow, typename Wide>
-constexpr Narrow ca_safe_downcast(Wide value) {
-    // Check if Narrow is an integer type
-    static_assert(std::is_integral<Narrow>::value, "Narrow type must be an integer type.");
-    static_assert(std::is_integral<Wide>::value, "Wide type must be an integer type.");
-
-    // Check that the value is within the range of Narrow
-    assert(value >= static_cast<Wide>(std::numeric_limits<Narrow>::min()) &&
-           value <= static_cast<Wide>(std::numeric_limits<Narrow>::max()));
-
-    // Perform the downcast
-    return static_cast<Narrow>(value);
-}// TODO
+constexpr Narrow ca_safe_downcast(Wide value);
 
 }
+
+// Include the implementation file
+#include "../../private/ca_math/ca_math_func.tpp"
 
 #endif //CA_MATH_FUNC_H
