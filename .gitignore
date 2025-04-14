@@ -6,9 +6,13 @@
 
 # Intelligence File
 .idea
+
 # Understand File
 *.und
 
-# CMake build floder
+# CMake build folder
 /build-debug/
 /build-release/
+
+# Test folder
+/temp/
