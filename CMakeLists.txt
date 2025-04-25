@@ -194,9 +194,12 @@ endif()
 # ----------------------------
 # ✅ Global compile arguments (both C and C++)
 # ----------------------------
-add_compile_options(-fno-strict-aliasing)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+#add_compile_options(-fno-strict-aliasing -mavx2 -mfma -O3 -march=native)
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+if (MSVC)
+    add_compile_options("/source-charset:utf-8" "/execution-charset:utf-8")
+endif()
 
 # ----------------------------
 # ✅ Clang-specific floating-point handling
@@ -231,4 +234,4 @@ endif()
 # ✅ Subdirectory structure
 # ----------------------------
 add_subdirectory(source)
-
+add_subdirectory(temp)

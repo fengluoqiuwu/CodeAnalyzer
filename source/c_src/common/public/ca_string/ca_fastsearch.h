@@ -28,7 +28,7 @@ constexpr ca_uint64_t BLOOM_WIDTH = 64;
  *
  * If the search length exceeds this value, memchr/wmemchr is used.
  */
-constexpr ca_size_t MEMCHR_CUT_OFF = 15;
+constexpr ca_size_t MEMCHR_CUT_OFF = 31;
 
 /**
  * @brief Adds a character to the bloom filter mask.
@@ -102,8 +102,10 @@ struct CheckedIndexer {
     static constexpr bool is_reverse = reverse; ///< Indicates if the indexer is in reverse mode.
 
 private:
+    static constexpr char_type zero = 0; ///< Default value for uninitialized characters.
+
     char_type *buffer; ///< Pointer to the current position in the buffer.
-    size_t length;     ///< Remaining number of accessible elements.
+    ca_size_t length;  ///< Remaining number of accessible elements.
 
 public:
 
@@ -129,8 +131,18 @@ public:
      *
      * @note Asserts internally that buffer is not null and length is non-zero.
      */
-    inline char_type
+    inline char_type&
     operator*();
+
+    /**
+     * @brief Dereference operator to access the current character. (const version)
+     *
+     * @return The character at the current position.
+     *
+     * @note Asserts internally that buffer is not null and length is non-zero.
+     */
+    inline const char_type&
+    operator*() const;
 
     /**
      * @brief Safe indexed access to the buffer.
@@ -140,9 +152,22 @@ public:
      *
      * @param index The offset index from the current position.
      * @return The character at the offset or 0 if index is out of bounds.
+     * @note Be careful when it returns 0(out of range sign), and do not change it value.
      */
-    inline char_type
+    inline char_type&
     operator[](size_t index);
+
+    /**
+     * @brief Safe indexed access to the buffer. (const version)
+     *
+     * In forward mode, accesses `buffer[index]`;
+     * in reverse mode, accesses `buffer[-index]` (i.e., going backward).
+     *
+     * @param index The offset index from the current position.
+     * @return The character at the offset or 0 if index is out of bounds.
+     */
+    inline const char_type&
+    operator[](size_t index) const;
 
     /**
      * @brief Move the indexer forward by a specified number of elements.
@@ -153,7 +178,7 @@ public:
      * @return A new CheckedIndexer at the new position with reduced length.
      */
     inline CheckedIndexer<char_type, reverse>
-    operator+(size_t rhs);
+    operator+(size_t rhs) const;
 
     /**
      * @brief Move the indexer forward in-place.
@@ -164,7 +189,7 @@ public:
      * @return Reference to the modified indexer.
      */
     inline CheckedIndexer<char_type, reverse> &
-        operator+=(size_t rhs);
+    operator+=(size_t rhs);
 
     /**
      * @brief Prefix increment: move by 1 element.
@@ -174,7 +199,7 @@ public:
      * @return Reference to the updated indexer.
      */
     inline CheckedIndexer<char_type, reverse> &
-        operator++();
+    operator++();
 
     /**
      * @brief Postfix increment: move by 1 element, return previous state.
@@ -195,7 +220,7 @@ public:
      * @return Reference to the updated indexer.
      */
     inline CheckedIndexer<char_type, reverse> &
-        operator-=(size_t rhs);
+    operator-=(size_t rhs);
 
     /**
      * @brief Prefix decrement: move backward by 1 element.
@@ -205,7 +230,7 @@ public:
      * @return Reference to the updated indexer.
      */
     inline CheckedIndexer<char_type, reverse> &
-        operator--();
+    operator--();
 
     /**
      * @brief Postfix decrement: move backward by 1 element, return previous state.
@@ -314,6 +339,14 @@ public:
      */
     inline char_type *
     get_buffer() const;
+
+    /**
+     * @brief Returns the length of the buffer.
+     *
+     * @return Length of the buffer.
+     */
+    [[nodiscard]] inline ca_size_t
+    get_length() const;
 };
 
 /**
@@ -399,7 +432,7 @@ count_char(CheckedIndexer<char_type, from_right> str, ca_size_t n,
  * Example:
  *
  * - [Input-1] pattern = "abcdabcabc"; pattern_len = 10;
- * - [Output-1] index = 3; period = 1;
+ * - [Output-1] index = 3; period = 7;
  *
  * - [Input-2] pattern = "abcdabcabc"; pattern_len = 10; invert_alphabet = true;
  * - [Output-2] index = 4; period = 3;
@@ -446,6 +479,8 @@ template <typename char_type, bool from_right>
 inline ca_size_t
 factorize(CheckedIndexer<char_type, from_right> pattern, ca_size_t pattern_len,
           ca_size_t *return_period);
+
+namespace internal {
 
 /**
  * @brief Define the shift type used in the table.
@@ -572,7 +607,7 @@ two_way_periodic(CheckedIndexer<char_type, from_right> str, ca_size_t str_len,
 template <typename char_type, bool from_right>
 inline bool
 two_way_not_periodic(CheckedIndexer<char_type, from_right> str, ca_size_t str_len,
-                     prework<char_type, from_right> *work, ca_size_t *index);
+prework<char_type, from_right> *work, ca_size_t *index);
 
 /**
  * @brief Searches for a pattern (substring) within `str` (string)
@@ -603,6 +638,8 @@ template <typename char_type, bool from_right>
 bool
 two_way(CheckedIndexer<char_type, from_right> str, ca_size_t str_len,
         prework<char_type, from_right> *work, ca_size_t *index);
+
+}
 
 /**
  * @brief Finds the first occurrence of a pattern (substring) within a str (string).

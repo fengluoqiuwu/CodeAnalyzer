@@ -16,7 +16,7 @@ using namespace ca::ca_string::fastsearch;
 // Bloom Filter Tests
 // ===============================
 
-TEST(FastSearchTest, BloomFilter_CharTypeAddAndFind) {
+TEST(CaFastSearchTest, BloomFilter_CharTypeAddAndFind) {
     uint64_t mask = 0;
     constexpr ca_char_t ch = 'a';  // ASCII 97 → bit 33 (97 & 63)
 
@@ -28,7 +28,7 @@ TEST(FastSearchTest, BloomFilter_CharTypeAddAndFind) {
     EXPECT_FALSE(bloom_find(mask, 'z'));  // ASCII 122 → bit 58
 }
 
-TEST(FastSearchTest, BloomFilter_Char4TypeAddAndFind) {
+TEST(CaFastSearchTest, BloomFilter_Char4TypeAddAndFind) {
     uint64_t mask = 0;
     constexpr ca_char4_t ch = 0x12345678;  // Arbitrary 32-bit number → bit 56
 
@@ -41,7 +41,7 @@ TEST(FastSearchTest, BloomFilter_Char4TypeAddAndFind) {
     EXPECT_FALSE(bloom_find(mask, other));
 }
 
-TEST(FastSearchTest, BloomFilter_MultipleCharacters) {
+TEST(CaFastSearchTest, BloomFilter_MultipleCharacters) {
     uint64_t mask = 0;
     bloom_add(mask, 'a');  // bit 33
     bloom_add(mask, 'b');  // bit 34
@@ -53,7 +53,7 @@ TEST(FastSearchTest, BloomFilter_MultipleCharacters) {
     EXPECT_FALSE(bloom_find(mask, 'z'));  // bit 58
 }
 
-TEST(FastSearchTest, BloomFilter_EdgeBits) {
+TEST(CaFastSearchTest, BloomFilter_EdgeBits) {
     uint64_t mask = 0;
     bloom_add(mask, 0);              // bit 0
     bloom_add(mask, BLOOM_WIDTH - 1);  // bit 63
@@ -67,7 +67,7 @@ TEST(FastSearchTest, BloomFilter_EdgeBits) {
 // CheckedIndexer Tests
 // ===============================
 
-TEST(FastSearchTest, CheckedIndexer_DefaultConstructor) {
+TEST(CaFastSearchTest, CheckedIndexer_DefaultConstructor) {
     const CheckedIndexer<ca_char_t, false> indexer1;
     EXPECT_FALSE(indexer1.is_reverse);
     EXPECT_EQ(indexer1.get_buffer(), nullptr);
@@ -80,7 +80,7 @@ TEST(FastSearchTest, CheckedIndexer_DefaultConstructor) {
     EXPECT_EQ(indexer2.get_length(), 0);
 }
 
-TEST(FastSearchTest, CheckedIndexer_Constructor) {
+TEST(CaFastSearchTest, CheckedIndexer_Constructor) {
     auto* char_buf = new ca_char_t[10];
     auto* char4_buf = new ca_char4_t[10];
 
@@ -104,7 +104,7 @@ TEST(FastSearchTest, CheckedIndexer_Constructor) {
     delete[] char4_buf;
 }
 
-TEST(FastSearchTest, CheckedIndexer_DereferenceOperator) {
+TEST(CaFastSearchTest, CheckedIndexer_DereferenceOperator) {
     auto* char_buf = new ca_char_t[10];
     auto* char4_buf = new ca_char4_t[10];
 
@@ -128,7 +128,7 @@ TEST(FastSearchTest, CheckedIndexer_DereferenceOperator) {
 }
 
 
-TEST(FastSearchTest, CheckedIndexer_IndexAccessOperator) {
+TEST(CaFastSearchTest, CheckedIndexer_IndexAccessOperator) {
     auto* char_buf = new ca_char_t[10];
     auto* char4_buf = new ca_char4_t[10];
 
@@ -158,7 +158,7 @@ TEST(FastSearchTest, CheckedIndexer_IndexAccessOperator) {
     delete[] char4_buf;
 }
 
-TEST(FastSearchTest, CheckedIndexer_ArithmeticOperators) {
+TEST(CaFastSearchTest, CheckedIndexer_ArithmeticOperators) {
     auto* char_buf = new ca_char_t[10];
 
     for (ca_size_t i = 0; i < 10; ++i) {
@@ -190,7 +190,7 @@ TEST(FastSearchTest, CheckedIndexer_ArithmeticOperators) {
     delete[] char_buf;
 }
 
-TEST(FastSearchTest, CheckedIndexer_CompoundAssignmentOperators) {
+TEST(CaFastSearchTest, CheckedIndexer_CompoundAssignmentOperators) {
     auto* char_buf = new ca_char_t[10];
 
     for (ca_size_t i = 0; i < 10; ++i) {
@@ -220,7 +220,7 @@ TEST(FastSearchTest, CheckedIndexer_CompoundAssignmentOperators) {
     delete[] char_buf;
 }
 
-TEST(FastSearchTest, CheckedIndexer_IncrementAndDecrementOperators) {
+TEST(CaFastSearchTest, CheckedIndexer_IncrementAndDecrementOperators) {
     auto* char_buf = new ca_char_t[10];
 
     for (ca_size_t i = 0; i < 10; ++i) {
@@ -263,7 +263,7 @@ TEST(FastSearchTest, CheckedIndexer_IncrementAndDecrementOperators) {
     delete[] char_buf;
 }
 
-TEST(FastSearchTest, CheckedIndexer_CompareOperators) {
+TEST(CaFastSearchTest, CheckedIndexer_CompareOperators) {
     auto* char_buf = new ca_char_t[10];
 
     for (ca_size_t i = 0; i < 10; ++i) {
@@ -311,7 +311,7 @@ TEST(FastSearchTest, CheckedIndexer_CompareOperators) {
     delete[] char_buf;
 }
 
-TEST(FastSearchTest, CheckedIndexer_Cmp) {
+TEST(CaFastSearchTest, CheckedIndexer_Cmp) {
     auto* char_buf = new ca_char_t[10];
 
     for (ca_size_t i = 0; i < 10; ++i) {
@@ -356,7 +356,7 @@ TEST(FastSearchTest, CheckedIndexer_Cmp) {
 // Find Char Tests
 // ===============================
 
-constexpr char article[] =
+constexpr char article[6337] =
 "Title: Bridging the Future: How Technology is Transforming Education\n"
 "\n"
 "In the 21st century, technology has become an inseparable part of everyday life, and its integration into education\n"
@@ -449,15 +449,15 @@ constexpr char article[] =
 "educational system that is not only smarter but also more compassionate and inclusive.\n";
 
 constexpr int len = sizeof(article);
-auto article_char = new ca_char_t[len];
-auto article_char2 = new ca_char2_t[len];
-auto article_char4 = new ca_char4_t[len];
+ca_char_t article_char[len];
+ca_char2_t article_char2[len];
+ca_char4_t article_char4[len];
 
 int init_article(const char c[], ca_char_t* char_p, ca_char2_t* char2_p, ca_char4_t* char4_p) {
     for (int i = 0; i < len; ++i) {
         char_p[i] = c[i];
-        char2_p[i] = c[i];
-        char4_p[i] = c[i];
+        char2_p[i] = static_cast<ca_char2_t>(char_p[i]);
+        char4_p[i] = static_cast<ca_char4_t>(char_p[i]);
     }
     return 0;
 }
@@ -467,32 +467,419 @@ int tmp = init_article(article, article_char, article_char2, article_char4);
 #define LOG_RUNNING_TIME
 
 #ifndef LOG_RUNNING_TIME
-    #define LOG_RUNNING_TIME_UTILS(code, times)
+#define LOG_RUNNING_TIME_UTILS(code, times)
+#define TEST_RUNNING_TIME(test_suite_name, test_name) void ignore_test_##test_suite_name##_##test_name()
 #else
-    #include <chrono>
-    #include <iostream>
+#include <chrono>
+#include <iostream>
 
-    #define LOG_RUNNING_TIME_UTILS(code, times) { \
-        auto start = std::chrono::high_resolution_clock::now(); \
-        for (int i = 0; i < times; ++i) { \
-            code; \
-            asm volatile("" ::: "memory"); \
-        } \
-        auto end = std::chrono::high_resolution_clock::now(); \
-        std::chrono::duration<double, std::milli> duration = end - start; \
-        std::cout << times << " 次运行时间: " << duration.count() << " 毫秒" << std::endl; \
-    }
+#define LOG_RUNNING_TIME_UTILS(code, times) { \
+    auto start = std::chrono::high_resolution_clock::now(); \
+    for (int i = 0; i < times; ++i) { \
+        code; \
+        asm volatile("" ::"r"(tmp) : "memory"); \
+    } \
+    auto end = std::chrono::high_resolution_clock::now(); \
+    std::chrono::duration<double, std::milli> duration = end - start; \
+    std::cout << times << " times running time: " << duration.count() << " ms" << std::endl; \
+}
+
+#define TEST_RUNNING_TIME(test_suite_name, test_name) TEST(test_suite_name, test_name)
 #endif
 
-TEST(FastSearchTest, FindChar_ReturnValue) {
+TEST(CaFastSearchTest, FindChar_ReturnValue) {
     const CheckedIndexer<ca_char_t, false> indexer1(article_char, len);
     const CheckedIndexer<ca_char2_t, false> indexer2(article_char2, len);
     const CheckedIndexer<ca_char4_t, false> indexer3(article_char4, len);
     ca_size_t tmp;
 
-    std::cout << sizeof(wchar_t) << std::endl;
+    constexpr int num_of_test = 5;
+    constexpr char chars[] = {'c', 'a', '.', '\0', '\t'};
+    constexpr ca_size_t indexes[] = {34, 48, 269, len-1, 0};
+    constexpr bool results[] = {true, true, true, true, false};
 
-    LOG_RUNNING_TIME_UTILS(find_char(indexer1, len, static_cast<ca_char_t>('c'), &tmp);, 10000)
-    LOG_RUNNING_TIME_UTILS(find_char(indexer2, len, static_cast<ca_char2_t>('c'), &tmp);, 10000)
-    LOG_RUNNING_TIME_UTILS(find_char(indexer3, len, static_cast<ca_char4_t>('c'), &tmp);, 10000)
+    for (int i = 0; i < num_of_test; ++i) {
+        bool found = find_char(indexer1, len, static_cast<ca_char_t>(chars[i]), &tmp);
+        if (found) {EXPECT_EQ(tmp, indexes[i]);}
+        EXPECT_EQ(found, results[i]);
+        found = find_char(indexer2, len, static_cast<ca_char2_t>(chars[i]), &tmp);
+        if (found) {EXPECT_EQ(tmp, indexes[i]);}
+        EXPECT_EQ(found, results[i]);
+        found = find_char(indexer3, len, static_cast<ca_char4_t>(chars[i]), &tmp);
+        if (found) {EXPECT_EQ(tmp, indexes[i]);}
+        EXPECT_EQ(found, results[i]);
+    }
+}
+
+TEST_RUNNING_TIME(CaFastSearchTest, FindChar_RunningTime) {
+    const CheckedIndexer<ca_char_t, false> indexer1(article_char, len);
+    const CheckedIndexer<ca_char2_t, false> indexer2(article_char2, len);
+    const CheckedIndexer<ca_char4_t, false> indexer3(article_char4, len);
+    ca_size_t tmp = 0;
+
+    std::cout << "####################RunningTime-FindChar####################" << std::endl;
+    LOG_RUNNING_TIME_UTILS(find_char(indexer1, len, static_cast<ca_char_t>('c'), &tmp);, 100000)
+    LOG_RUNNING_TIME_UTILS(find_char(indexer2, len, static_cast<ca_char2_t>('c'), &tmp);, 100000)
+    LOG_RUNNING_TIME_UTILS(find_char(indexer3, len, static_cast<ca_char4_t>('c'), &tmp);, 100000)
+    std::cout << "############################################################" << std::endl;
+}
+
+TEST(CaFastSearchTest, FindChar_AssertFailure) {
+    const CheckedIndexer<ca_char_t, false> indexer1(article_char, len);
+
+    EXPECT_DEATH({
+        find_char(indexer1, len, static_cast<ca_char_t>('c'), nullptr);
+    }, ".*");
+}
+
+TEST(CaFastSearchTest, RFindChar_ReturnValue) {
+    const CheckedIndexer<ca_char_t, false> indexer1(article_char, len);
+    const CheckedIndexer<ca_char2_t, false> indexer2(article_char2, len);
+    const CheckedIndexer<ca_char4_t, false> indexer3(article_char4, len);
+    ca_size_t tmp;
+
+    constexpr int num_of_test = 5;
+    constexpr char chars[] = {'j', 'a', '.', '\0', '\t'};
+    constexpr ca_size_t indexes[] = {5777, len - 16, len-3, len-1, 0};
+    constexpr bool results[] = {true, true, true, true, false};
+
+    for (int i = 0; i < num_of_test; ++i) {
+        bool found = rfind_char(indexer1, len, static_cast<ca_char_t>(chars[i]), &tmp);
+        if (found) {EXPECT_EQ(tmp, indexes[i]);}
+        EXPECT_EQ(found, results[i]);
+        found = rfind_char(indexer2, len, static_cast<ca_char2_t>(chars[i]), &tmp);
+        if (found) {EXPECT_EQ(tmp, indexes[i]);}
+        EXPECT_EQ(found, results[i]);
+        found = rfind_char(indexer3, len, static_cast<ca_char4_t>(chars[i]), &tmp);
+        if (found) {EXPECT_EQ(tmp, indexes[i]);}
+        EXPECT_EQ(found, results[i]);
+    }
+}
+
+TEST_RUNNING_TIME(CaFastSearchTest, RFindChar_RunningTime) {
+    const CheckedIndexer<ca_char_t, false> indexer1(article_char, len);
+    const CheckedIndexer<ca_char2_t, false> indexer2(article_char2, len);
+    const CheckedIndexer<ca_char4_t, false> indexer3(article_char4, len);
+    ca_size_t tmp = 0;
+
+    std::cout << "####################RunningTime-FindChar####################" << std::endl;
+    LOG_RUNNING_TIME_UTILS(rfind_char(indexer1, len, static_cast<ca_char_t>('j'), &tmp);, 100000)
+    LOG_RUNNING_TIME_UTILS(rfind_char(indexer2, len, static_cast<ca_char2_t>('j'), &tmp);, 100000)
+    LOG_RUNNING_TIME_UTILS(rfind_char(indexer3, len, static_cast<ca_char4_t>('j'), &tmp);, 100000)
+    std::cout << "############################################################" << std::endl;
+}
+
+TEST(CaFastSearchTest, RFindChar_AssertFailure) {
+    const CheckedIndexer<ca_char_t, false> indexer1(article_char, len);
+
+    EXPECT_DEATH({
+        find_char(indexer1, len, static_cast<ca_char_t>('j'), nullptr);
+    }, ".*");
+}
+
+TEST(CaFastSearchTest, CountChar_ReturnValue) {
+    const CheckedIndexer<ca_char_t, false> indexer1(article_char, len);
+    const CheckedIndexer<ca_char2_t, false> indexer2(article_char2, len);
+    const CheckedIndexer<ca_char4_t, false> indexer3(article_char4, len);
+    const CheckedIndexer<ca_char_t, true> indexer4(article_char, len);
+    const CheckedIndexer<ca_char2_t, true> indexer5(article_char2, len);
+    const CheckedIndexer<ca_char4_t, true> indexer6(article_char4, len);
+
+    constexpr int num_of_test = 5;
+    constexpr char chars[] = {'j', 'a', '.', '\0', '\t'};
+    constexpr ca_size_t nums[] = {4, 100, 43, 1, 0};
+
+    for (int i = 0; i < num_of_test; ++i) {
+        ca_size_t tmp = count_char(indexer1, len, static_cast<ca_char_t>(chars[i]), 100);
+        EXPECT_EQ(tmp, nums[i]);
+        tmp = count_char(indexer2, len, static_cast<ca_char2_t>(chars[i]), 100);
+        EXPECT_EQ(tmp, nums[i]);
+        tmp = count_char(indexer3, len, static_cast<ca_char4_t>(chars[i]), 100);
+        EXPECT_EQ(tmp, nums[i]);
+        tmp = count_char(indexer4, len, static_cast<ca_char_t>(chars[i]), 100);
+        EXPECT_EQ(tmp, nums[i]);
+        tmp = count_char(indexer5, len, static_cast<ca_char2_t>(chars[i]), 100);
+        EXPECT_EQ(tmp, nums[i]);
+        tmp = count_char(indexer6, len, static_cast<ca_char4_t>(chars[i]), 100);
+        EXPECT_EQ(tmp, nums[i]);
+    }
+}
+
+TEST(CaFastSearchTest, LexSearch_ReturnValue) {
+    char pattern1[] = "Bridging";
+    char pattern2[] = "abcdabcabc";
+
+    const CheckedIndexer<ca_char_t, false> indexer1(
+        reinterpret_cast<ca_char_t*>(&pattern1[0]), 8
+    );
+    const CheckedIndexer<ca_char_t, false> indexer2(
+        reinterpret_cast<ca_char_t*>(&pattern2[0]), 10
+    );
+    const CheckedIndexer<ca_char_t, true> indexer3(
+        reinterpret_cast<ca_char_t*>(&pattern1[0]), 8
+    );
+    const CheckedIndexer<ca_char_t, true> indexer4(
+        reinterpret_cast<ca_char_t*>(&pattern2[0]), 10
+    );
+
+    ca_size_t index = 0;
+    ca_size_t period = 0;
+
+    index = lex_search(indexer1, indexer1.get_length(), &period, false);
+    EXPECT_EQ(index, 1);
+    EXPECT_EQ(period, 7);
+    index = lex_search(indexer1, indexer1.get_length(), &period, true);
+    EXPECT_EQ(index, 0);
+    EXPECT_EQ(period, 8);
+    index = lex_search(indexer2, indexer2.get_length(), &period, false);
+    EXPECT_EQ(index, 3);
+    EXPECT_EQ(period, 7);
+    index = lex_search(indexer2, indexer2.get_length(), &period, true);
+    EXPECT_EQ(index, 4);
+    EXPECT_EQ(period, 3);
+    index = lex_search(indexer3, indexer3.get_length(), &period, false);
+    EXPECT_EQ(index, 6);
+    EXPECT_EQ(period, 2);
+    index = lex_search(indexer3, indexer3.get_length(), &period, true);
+    EXPECT_EQ(index, 7);
+    EXPECT_EQ(period, 1);
+    index = lex_search(indexer4, indexer4.get_length(), &period, false);
+    EXPECT_EQ(index, 6);
+    EXPECT_EQ(period, 4);
+    index = lex_search(indexer4, indexer4.get_length(), &period, true);
+    EXPECT_EQ(index, 2);
+    EXPECT_EQ(period, 7);
+}
+
+TEST(CaFastSearchTest, Factorize_ReturnValue) {
+    char pattern1[] = "Bridging";
+    char pattern2[] = "abcdabcabc";
+
+    const CheckedIndexer<ca_char_t, false> indexer1(
+        reinterpret_cast<ca_char_t*>(&pattern1[0]), 8
+    );
+    const CheckedIndexer<ca_char_t, false> indexer2(
+        reinterpret_cast<ca_char_t*>(&pattern2[0]), 10
+    );
+    const CheckedIndexer<ca_char_t, true> indexer3(
+        reinterpret_cast<ca_char_t*>(&pattern1[0]), 8
+    );
+    const CheckedIndexer<ca_char_t, true> indexer4(
+        reinterpret_cast<ca_char_t*>(&pattern2[0]), 10
+    );
+
+    ca_size_t index = 0;
+    ca_size_t period = 0;
+
+    index = factorize(indexer1, indexer1.get_length(), &period);
+    EXPECT_EQ(index, 1);
+    EXPECT_EQ(period, 7);
+    index = factorize(indexer2, indexer2.get_length(), &period);
+    EXPECT_EQ(index, 4);
+    EXPECT_EQ(period, 3);
+    index = factorize(indexer3, indexer3.get_length(), &period);
+    EXPECT_EQ(index, 7);
+    EXPECT_EQ(period, 1);
+    index = factorize(indexer4, indexer4.get_length(), &period);
+    EXPECT_EQ(index, 6);
+    EXPECT_EQ(period, 4);
+}
+
+char pattern1[] = "Title";
+char pattern2[] = ".";
+char pattern3[] = "\n";
+char pattern4[] = "For example, platforms like Khan Academy and Duolingo use adaptive learning algorithms";
+char pattern5[] = "ment";
+char pattern6[] = "nKSJjfiCnkjbKjkf";
+
+char* patterns[] = {
+    &pattern1[0], &pattern2[0], &pattern3[0],
+    &pattern4[0], &pattern5[0], &pattern6[0]
+};
+
+constexpr ca_size_t lens[] = {
+    5, 1, 1, sizeof("For example, platforms like Khan Academy and Duolingo use adaptive learning algorithms") - 1,
+    4, sizeof("nKSJjfiCnkjbKjkf") - 1
+};
+
+constexpr ca_size_t index[] = {0, 269, 68, 1710, 631, 0};
+constexpr ca_size_t reverse_index[] = {0, 6334, 6335, 1710, 6221, 0};
+constexpr ca_size_t count[] = {1, 43, 90, 1, 20, 0};
+constexpr bool result[] = {true, true, true, true, true, false};
+
+TEST(CaFastSearchTest, TwoWayFind_ReturnValue) {
+    const CheckedIndexer<ca_char_t, false> indexer(article_char, len - 1);
+    const CheckedIndexer<ca_char_t, true> reverse_indexer(article_char, len);
+    CheckedIndexer<ca_char_t, false> *pattern_indexers[6];
+    CheckedIndexer<ca_char_t, true> *reverse_pattern_indexers[6];
+
+    for (int i = 0; i < 6; i++) {
+        pattern_indexers[i] = new CheckedIndexer<ca_char_t, false>(reinterpret_cast<ca_char_t*>(patterns[i]), lens[i]);
+        reverse_pattern_indexers[i] = new CheckedIndexer<ca_char_t, true>(reinterpret_cast<ca_char_t*>(patterns[i]), lens[i]);
+    }
+
+    for (int i = 0; i < 6; ++i) {
+        ca_size_t tmp = -1;
+        bool found = two_way_find(indexer, indexer.get_length(), *pattern_indexers[i], pattern_indexers[i]->get_length(), &tmp);
+        EXPECT_EQ(found, result[i]) << "no_reversed with i: " << i ;;
+        if (found) {
+            EXPECT_EQ(tmp, index[i]) << "no_reversed with i: " << i ;
+        }
+
+        found = two_way_find(reverse_indexer, reverse_indexer.get_length(), *reverse_pattern_indexers[i], reverse_pattern_indexers[i]->get_length(), &tmp);
+        EXPECT_EQ(found, result[i]) << "reversed with i: " << i ;;
+        if (found) {
+            EXPECT_EQ(tmp, reverse_index[i]) << "reversed with i: " << i ;
+        }
+    }
+
+    for (int i = 0; i < 6; i++) {
+        delete[] pattern_indexers[i];
+        delete[] reverse_pattern_indexers[i];
+    }
+}
+
+TEST(CaFastSearchTest, TwoWayCount_ReturnValue) {
+    const CheckedIndexer<ca_char_t, false> indexer(article_char, len - 1);
+    const CheckedIndexer<ca_char_t, true> reverse_indexer(article_char, len);
+    CheckedIndexer<ca_char_t, false> *pattern_indexers[6];
+    CheckedIndexer<ca_char_t, true> *reverse_pattern_indexers[6];
+
+    for (int i = 0; i < 6; i++) {
+        pattern_indexers[i] = new CheckedIndexer<ca_char_t, false>(reinterpret_cast<ca_char_t*>(patterns[i]), lens[i]);
+        reverse_pattern_indexers[i] = new CheckedIndexer<ca_char_t, true>(reinterpret_cast<ca_char_t*>(patterns[i]), lens[i]);
+    }
+
+    for (int i = 0; i < 6; ++i) {
+        ca_size_t tmp = -1;
+        tmp = two_way_count(indexer, indexer.get_length(), *pattern_indexers[i], pattern_indexers[i]->get_length(), 100);
+        ASSERT_EQ(tmp, count[i]) << "no_reversed with i: " << i ;
+
+        tmp = -1;
+        tmp = two_way_count(reverse_indexer, reverse_indexer.get_length(), *reverse_pattern_indexers[i], reverse_pattern_indexers[i]->get_length(), 100);
+        ASSERT_EQ(tmp, count[i]) << "reversed with i: " << i ;
+    }
+
+    for (int i = 0; i < 6; i++) {
+        delete[] pattern_indexers[i];
+        delete[] reverse_pattern_indexers[i];
+    }
+}
+
+TEST(CaFastSearchTest, DefaultFind_ReturnValue) {
+    const CheckedIndexer<ca_char_t, false> indexer(article_char, len - 1);
+    const CheckedIndexer<ca_char_t, true> reverse_indexer(article_char, len);
+    CheckedIndexer<ca_char_t, false> *pattern_indexers[6];
+    CheckedIndexer<ca_char_t, true> *reverse_pattern_indexers[6];
+
+    for (int i = 0; i < 6; i++) {
+        pattern_indexers[i] = new CheckedIndexer<ca_char_t, false>(reinterpret_cast<ca_char_t*>(patterns[i]), lens[i]);
+        reverse_pattern_indexers[i] = new CheckedIndexer<ca_char_t, true>(reinterpret_cast<ca_char_t*>(patterns[i]), lens[i]);
+    }
+
+    for (int i = 0; i < 6; ++i) {
+        ca_size_t tmp = -1;
+        bool found = default_find(indexer, indexer.get_length(), *pattern_indexers[i], pattern_indexers[i]->get_length(), &tmp);
+        EXPECT_EQ(found, result[i]) << "no_reversed with i: " << i ;;
+        if (found) {
+            EXPECT_EQ(tmp, index[i]) << "no_reversed with i: " << i ;
+        }
+
+        found = default_find(reverse_indexer, reverse_indexer.get_length(), *reverse_pattern_indexers[i], reverse_pattern_indexers[i]->get_length(), &tmp);
+        EXPECT_EQ(found, result[i]) << "reversed with i: " << i ;;
+        if (found) {
+            EXPECT_EQ(tmp, reverse_index[i]) << "reversed with i: " << i ;
+        }
+    }
+
+    for (int i = 0; i < 6; i++) {
+        delete[] pattern_indexers[i];
+        delete[] reverse_pattern_indexers[i];
+    }
+}
+
+TEST(CaFastSearchTest, DefaultCount_ReturnValue) {
+    const CheckedIndexer<ca_char_t, false> indexer(article_char, len - 1);
+    const CheckedIndexer<ca_char_t, true> reverse_indexer(article_char, len);
+    CheckedIndexer<ca_char_t, false> *pattern_indexers[6];
+    CheckedIndexer<ca_char_t, true> *reverse_pattern_indexers[6];
+
+    for (int i = 0; i < 6; i++) {
+        pattern_indexers[i] = new CheckedIndexer<ca_char_t, false>(reinterpret_cast<ca_char_t*>(patterns[i]), lens[i]);
+        reverse_pattern_indexers[i] = new CheckedIndexer<ca_char_t, true>(reinterpret_cast<ca_char_t*>(patterns[i]), lens[i]);
+    }
+
+    for (int i = 0; i < 6; ++i) {
+        ca_size_t tmp = -1;
+        tmp = default_count(indexer, indexer.get_length(), *pattern_indexers[i], pattern_indexers[i]->get_length(), 100);
+        ASSERT_EQ(tmp, count[i]) << "no_reversed with i: " << i ;
+
+        tmp = -1;
+        tmp = default_count(reverse_indexer, reverse_indexer.get_length(), *reverse_pattern_indexers[i], reverse_pattern_indexers[i]->get_length(), 100);
+        ASSERT_EQ(tmp, count[i]) << "reversed with i: " << i ;
+    }
+
+    for (int i = 0; i < 6; i++) {
+        delete[] pattern_indexers[i];
+        delete[] reverse_pattern_indexers[i];
+    }
+}
+
+TEST(CaFastSearchTest, AdaptiveFind_ReturnValue) {
+    const CheckedIndexer<ca_char_t, false> indexer(article_char, len - 1);
+    const CheckedIndexer<ca_char_t, true> reverse_indexer(article_char, len);
+    CheckedIndexer<ca_char_t, false> *pattern_indexers[6];
+    CheckedIndexer<ca_char_t, true> *reverse_pattern_indexers[6];
+
+    for (int i = 0; i < 6; i++) {
+        pattern_indexers[i] = new CheckedIndexer<ca_char_t, false>(reinterpret_cast<ca_char_t*>(patterns[i]), lens[i]);
+        reverse_pattern_indexers[i] = new CheckedIndexer<ca_char_t, true>(reinterpret_cast<ca_char_t*>(patterns[i]), lens[i]);
+    }
+
+    for (int i = 0; i < 6; ++i) {
+        ca_size_t tmp = -1;
+        bool found = adaptive_find(indexer, indexer.get_length(), *pattern_indexers[i], pattern_indexers[i]->get_length(), &tmp);
+        EXPECT_EQ(found, result[i]) << "no_reversed with i: " << i ;;
+        if (found) {
+            EXPECT_EQ(tmp, index[i]) << "no_reversed with i: " << i ;
+        }
+
+        found = adaptive_find(reverse_indexer, reverse_indexer.get_length(), *reverse_pattern_indexers[i], reverse_pattern_indexers[i]->get_length(), &tmp);
+        EXPECT_EQ(found, result[i]) << "reversed with i: " << i ;;
+        if (found) {
+            EXPECT_EQ(tmp, reverse_index[i]) << "reversed with i: " << i ;
+        }
+    }
+
+    for (int i = 0; i < 6; i++) {
+        delete[] pattern_indexers[i];
+        delete[] reverse_pattern_indexers[i];
+    }
+}
+
+TEST(CaFastSearchTest, AdaptiveCount_ReturnValue) {
+    const CheckedIndexer<ca_char_t, false> indexer(article_char, len - 1);
+    const CheckedIndexer<ca_char_t, true> reverse_indexer(article_char, len);
+    CheckedIndexer<ca_char_t, false> *pattern_indexers[6];
+    CheckedIndexer<ca_char_t, true> *reverse_pattern_indexers[6];
+
+    for (int i = 0; i < 6; i++) {
+        pattern_indexers[i] = new CheckedIndexer<ca_char_t, false>(reinterpret_cast<ca_char_t*>(patterns[i]), lens[i]);
+        reverse_pattern_indexers[i] = new CheckedIndexer<ca_char_t, true>(reinterpret_cast<ca_char_t*>(patterns[i]), lens[i]);
+    }
+
+    for (int i = 0; i < 6; ++i) {
+        ca_size_t tmp = -1;
+        tmp = adaptive_count(indexer, indexer.get_length(), *pattern_indexers[i], pattern_indexers[i]->get_length(), 100);
+        ASSERT_EQ(tmp, count[i]) << "no_reversed with i: " << i ;
+
+        tmp = -1;
+        tmp = adaptive_count(reverse_indexer, reverse_indexer.get_length(), *reverse_pattern_indexers[i], reverse_pattern_indexers[i]->get_length(), 100);
+        ASSERT_EQ(tmp, count[i]) << "reversed with i: " << i ;
+    }
+
+    for (int i = 0; i < 6; i++) {
+        delete[] pattern_indexers[i];
+        delete[] reverse_pattern_indexers[i];
+    }
 }

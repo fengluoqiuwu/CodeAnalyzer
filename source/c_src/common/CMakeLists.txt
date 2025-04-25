@@ -67,6 +67,53 @@ target_include_directories(ca_math
 target_link_libraries(ca_math PRIVATE ca_misc)
 
 # ================================
+# Platform
+# ================================
+
+add_subdirectory(public/ca_platform)
+
+if(WIN32)
+    set(CA_PLATFORM_API_NAME "win32")
+else()
+    set(CA_PLATFORM_API_NAME "posix")
+endif()
+
+# Collect Platform Library sources
+set(CA_PLATFORM_SOURCES
+        private/ca_platform/temp.cpp
+)
+
+# Collect Platform Library headers to be installed
+set(CA_PLATFORM_PUBLIC_HEADERS
+        public/ca_platform/ca_platform.h
+        public/ca_platform/ca_platform_file.h
+        public/ca_platform/ca_platform_thread.h
+
+        public/ca_platform/file/file.h
+        public/ca_platform/file/file_defs.h
+        public/ca_platform/file/file_error.h
+        public/ca_platform/file/file_path.h
+        public/ca_platform/file/file_temp.h
+)
+
+# Platform Library as a static library
+add_library(ca_platform STATIC)
+
+# Set the sources for the Platform Library
+target_sources(ca_platform
+        PUBLIC ${CA_PLATFORM_PUBLIC_HEADERS}
+        PRIVATE ${CA_PLATFORM_SOURCES}
+)
+
+# Include directories for Math Library
+target_include_directories(ca_platform
+        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/public/ca_platform
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private/ca_platform
+)
+
+target_link_libraries(ca_platform PRIVATE ca_platform_config ca_string ca_math)
+
+# ================================
 # String Library
 # ================================
 # Collect String Library sources

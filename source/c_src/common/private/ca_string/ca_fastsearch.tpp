@@ -11,8 +11,13 @@
 #include "ca_math.h"
 
 #include <cassert>
-#include <cstring>
-#include <cwchar>
+#include <emmintrin.h>  // SSE2
+#ifdef __AVX2__
+#include <immintrin.h>  // AVX2
+#else
+// ReSharper disable once CppUnusedIncludeDirective
+#include <smmintrin.h>  // SSE4.1 (for 4 bytes type fallback)
+#endif
 
 namespace ca::ca_string {
 
@@ -49,7 +54,7 @@ CheckedIndexer<char_type, reverse>::CheckedIndexer(char_type *buf, const size_t 
 }
 
 template <typename char_type, bool reverse>
-inline char_type
+inline char_type&
 CheckedIndexer<char_type, reverse>::operator*()
 {
     assert(buffer != nullptr);
@@ -58,11 +63,36 @@ CheckedIndexer<char_type, reverse>::operator*()
 }
 
 template <typename char_type, bool reverse>
-inline char_type
+inline const char_type&
+CheckedIndexer<char_type, reverse>::operator*() const
+{
+    assert(buffer != nullptr);
+    assert(length != 0);
+    return *(this->buffer);
+}
+
+template <typename char_type, bool reverse>
+inline char_type&
 CheckedIndexer<char_type, reverse>::operator[](const size_t index)
 {
     if (index >= this->length) {
-        return static_cast<char_type>(0);
+        return *const_cast<char_type*>(&CheckedIndexer<char_type, reverse>::zero);
+    }
+
+    if constexpr(!reverse) {
+        return this->buffer[index];
+    }
+    else {
+        return this->buffer[-index];
+    }
+}
+
+template <typename char_type, bool reverse>
+inline const char_type&
+CheckedIndexer<char_type, reverse>::operator[](const size_t index) const
+{
+    if (index >= this->length) {
+        return CheckedIndexer<char_type, reverse>::zero;
     }
 
     if constexpr(!reverse) {
@@ -75,7 +105,7 @@ CheckedIndexer<char_type, reverse>::operator[](const size_t index)
 
 template <typename char_type, bool reverse>
 inline CheckedIndexer<char_type, reverse>
-CheckedIndexer<char_type, reverse>::operator+(const size_t rhs)
+CheckedIndexer<char_type, reverse>::operator+(size_t rhs) const
 {
     if (rhs > this->length) {
         rhs = this->length;
@@ -85,13 +115,16 @@ CheckedIndexer<char_type, reverse>::operator+(const size_t rhs)
         return CheckedIndexer(this->buffer + rhs, this->length - rhs);
     }
     else {
-        return CheckedIndexer(this->buffer - rhs, this->length - rhs);
+        CheckedIndexer<char_type, reverse> result;
+        result.buffer = this->buffer - rhs;
+        result.length = this->length - rhs;
+        return result;
     }
 }
 
 template <typename char_type, bool reverse>
 inline CheckedIndexer<char_type, reverse>&
-CheckedIndexer<char_type, reverse>::operator+=(const size_t rhs)
+CheckedIndexer<char_type, reverse>::operator+=(size_t rhs)
 {
     if (rhs > this->length) {
         rhs = this->length;
@@ -127,7 +160,7 @@ CheckedIndexer<char_type, reverse>::operator++(int)
 
 template <typename char_type, bool reverse>
 inline CheckedIndexer<char_type, reverse>&
-CheckedIndexer<char_type, reverse>::operator-=(const size_t rhs)
+CheckedIndexer<char_type, reverse>::operator-=(size_t rhs)
 {
     if constexpr (!reverse) {
         this->buffer -= rhs;
@@ -170,13 +203,16 @@ CheckedIndexer<char_type, reverse>::operator-(const CheckedIndexer<char_type, re
 
 template <typename char_type, bool reverse>
 inline CheckedIndexer<char_type, reverse>
-CheckedIndexer<char_type, reverse>::operator-(const size_t rhs) const
+CheckedIndexer<char_type, reverse>::operator-(size_t rhs) const
 {
     if constexpr (!reverse) {
         return CheckedIndexer(this->buffer - rhs, this->length + rhs);
     }
     else {
-        return CheckedIndexer(this->buffer + rhs, this->length + rhs);
+        CheckedIndexer<char_type, reverse> result;
+        result.buffer = this->buffer + rhs;
+        result.length = this->length + rhs;
+        return result;
     }
 }
 
@@ -268,26 +304,238 @@ CheckedIndexer<char_type, reverse>::get_buffer() const {
     return buffer;
 }
 
+template <typename char_type, bool reverse>
+inline ca_size_t
+CheckedIndexer<char_type, reverse>::get_length() const {
+    return length;
+}
+
+namespace internal {
+template <typename char_type>
+inline const char_type* memchr_simd(const char_type* Buf, char_type Val, const ca_size_t MaxCount) {
+    static_assert(sizeof(char_type) == 1 || sizeof(char_type) == 2 || sizeof(char_type) == 4,
+            "Only 1-byte, 2-byte or 4-byte types supported.");
+
+    ca_size_t i = 0;
+
+    if constexpr (sizeof(char_type) == 1) {
+        // ----------- ca_char_t / uint16_t path (SSE2) ------------
+        const __m128i target = _mm_set1_epi8(Val);
+
+        while (i + 16 <= MaxCount) {
+            const __m128i chunk = _mm_loadu_si128(reinterpret_cast<const __m128i*>(Buf + i));
+            const __m128i cmp = _mm_cmpeq_epi8(chunk, target);
+            const ca_int_t mask = _mm_movemask_epi8(cmp);  // 16-bit result
+
+            if (mask != 0) {
+                // Find exact match index
+                for (int j = 0; j < 16; ++j) {
+                    if (Buf[i + j] == Val) {
+                        return Buf + i + j;
+                    }
+                }
+            }
+
+            i += 16;
+        }
+    }
+    else if constexpr (sizeof(char_type) == 2) {
+        // ----------- ca_char2_t / uint16_t path (SSE2) ------------
+        const __m128i target = _mm_set1_epi16(Val);
+
+        while (i + 8 <= MaxCount) {
+            const __m128i chunk = _mm_loadu_si128(reinterpret_cast<const __m128i*>(Buf + i));
+            const __m128i cmp = _mm_cmpeq_epi16(chunk, target);
+            const ca_int_t mask = _mm_movemask_epi8(cmp);  // 16-bit result
+
+            if (mask != 0) {
+                // Find exact match index
+                for (int j = 0; j < 8; ++j) {
+                    if (Buf[i + j] == Val) {
+                        return Buf + i + j;
+                    }
+                }
+            }
+
+            i += 8;
+        }
+    }
+
+    else {
+#if defined(__AVX2__)
+        // ----------- ca_char4_t / uint32_t path (AVX2) ------------
+        const __m256i target = _mm256_set1_epi32(_Val);
+
+        while (i + 8 <= _MaxCount) {
+            const __m256i chunk = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(_Buf + i));
+            const __m256i cmp = _mm256_cmpeq_epi32(chunk, target);
+            const ca_int_t mask = _mm256_movemask_ps(_mm256_castsi256_ps(cmp));  // 8-bit result
+
+            if (mask != 0) {
+                for (int j = 0; j < 8; ++j) {
+                    if (_Buf[i + j] == _Val) {
+                        return _Buf + i + j;
+                    }
+                }
+            }
+
+            i += 8;
+        }
+#else
+        // ----------- ca_char4_t / uint32_t fallback (SSE4.1) ------------
+        const __m128i target = _mm_set1_epi32(Val);
+
+        while (i + 4 <= MaxCount) {
+            const __m128i chunk = _mm_loadu_si128(reinterpret_cast<const __m128i*>(Buf + i));
+            const __m128i cmp = _mm_cmpeq_epi32(chunk, target);
+            const ca_int_t mask = _mm_movemask_ps(_mm_castsi128_ps(cmp));  // 4-bit result
+
+            if (mask != 0) {
+                for (int j = 0; j < 4; ++j) {
+                    if (Buf[i + j] == Val) {
+                        return Buf + i + j;
+                    }
+                }
+            }
+
+            i += 4;
+        }
+#endif
+    }
+
+    // ----------- Tail fallback (scalar) ------------
+    for (; i < MaxCount; ++i) {
+        if (Buf[i] == Val) {
+            return Buf + i;
+        }
+    }
+
+    return nullptr;
+}
+
+template <typename char_type>
+inline const char_type* rmemchr_simd(const char_type* Buf, char_type Val, const ca_size_t MaxCount) {
+    static_assert(sizeof(char_type) == 1 || sizeof(char_type) == 2 || sizeof(char_type) == 4,
+            "Only 1-byte, 2-byte or 4-byte types supported.");
+    assert(MaxCount <= CA_INT64_MAX);
+
+    auto i = static_cast<ca_int64_t>(MaxCount);
+
+    if constexpr (sizeof(char_type) == 1) {
+        // ----------- ca_char_t / uint16_t path (SSE2) ------------
+        const __m128i target = _mm_set1_epi8(Val);
+
+        while (i - 16 >= 0) {
+            i -= 16;
+
+            const __m128i chunk = _mm_loadu_si128(reinterpret_cast<const __m128i*>(Buf + i));
+            const __m128i cmp = _mm_cmpeq_epi8(chunk, target);
+            const ca_int_t mask = _mm_movemask_epi8(cmp);  // 16-bit result
+
+            if (mask != 0) {
+                // Find exact match index
+                for (int j = 0; j < 16; ++j) {
+                    if (Buf[i + j] == Val) {
+                        return Buf + i + j;
+                    }
+                }
+            }
+        }
+    }
+    else if constexpr (sizeof(char_type) == 2) {
+        // ----------- ca_char2_t / uint16_t path (SSE2) ------------
+        const __m128i target = _mm_set1_epi16(Val);
+
+        while (i - 8 >= 0) {
+            i -= 8;
+
+            const __m128i chunk = _mm_loadu_si128(reinterpret_cast<const __m128i*>(Buf + i));
+            const __m128i cmp = _mm_cmpeq_epi16(chunk, target);
+            const ca_int_t mask = _mm_movemask_epi8(cmp);  // 16-bit result
+
+            if (mask != 0) {
+                // Find exact match index
+                for (int j = 0; j < 8; ++j) {
+                    if (Buf[i + j] == Val) {
+                        return Buf + i + j;
+                    }
+                }
+            }
+        }
+    }
+
+    else {
+#if defined(__AVX2__)
+        // ----------- ca_char4_t / uint32_t path (AVX2) ------------
+        const __m256i target = _mm256_set1_epi32(_Val);
+
+        while (i - 8 >= 0) {
+            i -= 8;
+
+            const __m256i chunk = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(_Buf + i));
+            const __m256i cmp = _mm256_cmpeq_epi32(chunk, target);
+            const ca_int_t mask = _mm256_movemask_ps(_mm256_castsi256_ps(cmp));  // 8-bit result
+
+            if (mask != 0) {
+                for (int j = 0; j < 8; ++j) {
+                    if (_Buf[i + j] == _Val) {
+                        return _Buf + i + j;
+                    }
+                }
+            }
+        }
+#else
+        // ----------- ca_char4_t / uint32_t fallback (SSE4.1) ------------
+        const __m128i target = _mm_set1_epi32(Val);
+
+        while (i - 4 >= 0) {
+            i -= 4;
+            const __m128i chunk = _mm_loadu_si128(reinterpret_cast<const __m128i*>(Buf + i));
+            const __m128i cmp = _mm_cmpeq_epi32(chunk, target);
+            const ca_int_t mask = _mm_movemask_ps(_mm_castsi128_ps(cmp));  // 4-bit result
+
+            if (mask != 0) {
+                for (int j = 0; j < 4; ++j) {
+                    if (Buf[i + j] == Val) {
+                        return Buf + i + j;
+                    }
+                }
+            }
+        }
+#endif
+    }
+
+    // ----------- Tail fallback (scalar) ------------
+    for (; i > 0; --i) {
+        if (Buf[i - 1] == Val) {
+            return Buf + i - 1;
+        }
+    }
+
+    return nullptr;
+}
+}
+
 template <typename char_type>
 inline bool
 find_char(const CheckedIndexer<char_type, false> str, const ca_size_t n, const char_type ch,
           ca_size_t *index) {
+    // Tested on 2025.04.14 with i9-13900H using -O3 optimization (by fengluoqiuwu)
+    // Benchmark results(100000 times for 'c' search):
+    // - 1-byte char (memchr): 0.1309 ms
+    // - 2-byte char (SSE2): 0.1961 ms
+    // - 4-byte char (AVX2): 0.1958 ms
+    // - 4-byte char (SSE4.1): 0.3291 ms
     static_assert(!str.is_reverse);
     assert(index != nullptr);
 
     char_type *buf = str.get_buffer();
     char_type *after = (str + n).get_buffer();
 
-    constexpr bool use_memchr = (sizeof(char_type) == sizeof(char));
-    constexpr bool use_wmemchr = (sizeof(char_type) == sizeof(wchar_t));
+    constexpr bool use_simd = (sizeof(char_type) ==1 || sizeof(char_type) == 2 || sizeof(char_type) == 4);
 
-    if (n > MEMCHR_CUT_OFF && (use_memchr || use_wmemchr)) {
-        if constexpr (use_memchr) {
-            buf = static_cast<char_type *>(memchr(buf, ch, n));
-        } else {
-            buf = static_cast<char_type *>(wmemchr(buf, ch, n));
-        }
-
+    if (n > MEMCHR_CUT_OFF &&  use_simd) {
+        buf = const_cast<char_type *>(internal::memchr_simd<char_type>(buf, ch, n));
         if (buf != nullptr) {
             *index = buf - str.get_buffer();
             return true;
@@ -309,14 +557,33 @@ template <typename char_type>
 inline bool
 rfind_char(const CheckedIndexer<char_type, false> str, const ca_size_t n, const char_type ch,
            ca_size_t *index) {
+    // Tested on 2025.04.15 with i9-13900H using -O3 optimization (by fengluoqiuwu)
+    // Benchmark results(100000 times for 'j' search):
+    // - 1-byte char (memchr): 1.1057 ms
+    // - 2-byte char (SSE2): 3.073 ms
+    // - 4-byte char (AVX2): 3.5635 ms
+    // - 4-byte char (SSE4.1): 5.7628 ms
     static_assert(!str.is_reverse);
     assert(index != nullptr);
 
-    char_type *buf = (str + n).get_buffer();
-    while (buf > str.get_buffer()) {
-        --buf;
-        if (*buf == ch) {
+    char_type *buf = str.get_buffer();
+    char_type *after = (str + n).get_buffer();
+
+    constexpr bool use_simd = (sizeof(char_type) ==1 || sizeof(char_type) == 2 || sizeof(char_type) == 4);
+
+    if (n > MEMCHR_CUT_OFF &&  use_simd) {
+        buf = const_cast<char_type *>(internal::rmemchr_simd<char_type>(buf, ch, n));
+        if (buf != nullptr) {
             *index = buf - str.get_buffer();
+            return true;
+        }
+        return false;
+    }
+
+    while (buf < after) {
+        --after;
+        if (*after == ch) {
+            *index = after - buf;
             return true;
         }
     }
@@ -417,6 +684,8 @@ factorize(const CheckedIndexer<char_type, from_right> pattern, const ca_size_t p
     *return_period = period;
     return cut;
 }
+
+namespace internal {
 
 template <typename char_type, bool from_right>
 void
@@ -646,11 +915,13 @@ two_way(const CheckedIndexer<char_type, from_right> str, const ca_size_t str_len
     assert(index != nullptr);
 
     if (work -> is_periodic) {
-        return two_way_periodic(str, str_len, work, index);
+        return internal::two_way_periodic(str, str_len, work, index);
     }
     else {
-        return two_way_not_periodic(str, str_len, work, index);
+        return internal::two_way_not_periodic(str, str_len, work, index);
     }
+}
+
 }
 
 template <typename char_type, bool from_right>
@@ -662,8 +933,8 @@ two_way_find(const CheckedIndexer<char_type, from_right> str, const ca_size_t st
     assert(index != nullptr);
     static_assert(str.is_reverse == pattern.is_reverse);
 
-    prework<char_type, from_right> work;
-    preprocess(pattern, pattern_len, &work);
+    internal::prework<char_type, from_right> work;
+    internal::preprocess(pattern, pattern_len, &work);
 
     const bool found = two_way(str, str_len, &work, index);
 
@@ -684,8 +955,8 @@ two_way_count(const CheckedIndexer<char_type, from_right> str, const ca_size_t s
 {
     static_assert(str.is_reverse == pattern.is_reverse);
 
-    prework<char_type, from_right> p;
-    preprocess(pattern, pattern_len, &p);
+    internal::prework<char_type, from_right> p;
+    internal::preprocess(pattern, pattern_len, &p);
     ca_size_t index = 0;
     ca_size_t count = 0;
     ca_size_t tmp;
@@ -737,7 +1008,12 @@ default_find(const CheckedIndexer<char_type, from_right> str, const ca_size_t st
             }
             if (j == last_index) {
                 /* got a match! */
-                *index = i;
+                if constexpr (!from_right) {
+                    *index = i;
+                }
+                else {
+                    *index = str_len  - pattern_len - i;
+                }
                 return true;
             }
             /* miss: check if next character is part of pattern */
@@ -859,13 +1135,21 @@ adaptive_find(const CheckedIndexer<char_type, from_right> str, const ca_size_t s
             }
             if (j == last_index) {
                 /* got a match! */
-                return i;
+                if constexpr (!from_right) {
+                    *index = i;
+                }
+                else {
+                    *index = str_len  - pattern_len - i;
+                }
+                return true;
             }
             hits += j + 1;
             if (hits > pattern_len / 4 && width - i > 2000) {
                 const bool res = two_way_find(str + i, str_len - i, pattern, pattern_len, index);
-                if (res) {
-                    *index += i;
+                if constexpr (!from_right) {
+                    if (res) {
+                        *index += i;
+                    }
                 }
                 return res;
             }

@@ -37,7 +37,7 @@ CharacterTestCase character_test_case[] = {
     { "\xF4\x8F\xBF\xBF",      4, 0x0010FFFF }  // max valid Unicode
 };
 
-TEST(TestCaUtf8Utils, Test_Utf8CharToUcs4CodeWithoutCheck_ReturnValue) {
+TEST(CaUtf8UtilsTest, Test_Utf8CharToUcs4CodeWithoutCheck_ReturnValue) {
     for (const auto [utf8_bytes, size, utf32_code] : character_test_case) {
         ca_char4_t code;
         int result = utf8_char_to_ucs4_code_without_check(utf8_bytes, &code);
@@ -54,7 +54,7 @@ TEST(TestCaUtf8Utils, Test_Utf8CharToUcs4CodeWithoutCheck_ReturnValue) {
     }
 }
 
-TEST(TestCaUtf8Utils, Test_Utf8CharToUcs4CodeWithoutCheck_AssertIvalidInput) {
+TEST(CaUtf8UtilsTest, Test_Utf8CharToUcs4CodeWithoutCheck_AssertIvalidInput) {
     const auto* utf8_bytes = reinterpret_cast<const ca_char_t*>(R"(A)");
     ca_char4_t utf32_code;
 
@@ -73,7 +73,7 @@ TEST(TestCaUtf8Utils, Test_Utf8CharToUcs4CodeWithoutCheck_AssertIvalidInput) {
         << " but got no assertion failure.";
 }
 
-TEST(TestCaUtf8Utils, Test_Ucs4CodeToUtf8CharWithoutCheck_ReturnValue) {
+TEST(CaUtf8UtilsTest, Test_Ucs4CodeToUtf8CharWithoutCheck_ReturnValue) {
     for (const auto [utf8_bytes, size, utf32_code] : character_test_case) {
         ca_char_t c[4];
         int result = ucs4_code_to_utf8_char_without_check(utf32_code, c);
@@ -93,7 +93,7 @@ TEST(TestCaUtf8Utils, Test_Ucs4CodeToUtf8CharWithoutCheck_ReturnValue) {
     }
 }
 
-TEST(TestCaUtf8Utils, Test_Ucs4CodeToUtf8CharWithoutCheck_AssertIvalidInput) {
+TEST(CaUtf8UtilsTest, Test_Ucs4CodeToUtf8CharWithoutCheck_AssertIvalidInput) {
     constexpr ca_char4_t utf32_code = 0x0010FFFF;
 
     EXPECT_DEATH({
@@ -104,7 +104,7 @@ TEST(TestCaUtf8Utils, Test_Ucs4CodeToUtf8CharWithoutCheck_AssertIvalidInput) {
         << " but got no assertion failure.";
 }
 
-TEST(TestCaUtf8Utils, Test_NumUtf8BytesForUtf8CharacterWithoutCheck_ReturnValue) {
+TEST(CaUtf8UtilsTest, Test_NumUtf8BytesForUtf8CharacterWithoutCheck_ReturnValue) {
     for (const auto [utf8_bytes, size, utf32_code] : character_test_case) {
         int result = num_utf8_bytes_for_utf8_character_without_check(utf8_bytes);
         EXPECT_EQ(result, size)
@@ -115,7 +115,7 @@ TEST(TestCaUtf8Utils, Test_NumUtf8BytesForUtf8CharacterWithoutCheck_ReturnValue)
     }
 }
 
-TEST(TestCaUtf8Utils, Test_NumUtf8BytesForUtf8CharacterWithoutCheck_InvalidCodepoint) {
+TEST(CaUtf8UtilsTest, Test_NumUtf8BytesForUtf8CharacterWithoutCheck_InvalidCodepoint) {
     constexpr char tmp[6][4] = {"\xC2", "\xE2\x82", "\xF0\x9F\x98", "\xF0", "\xE0", "\xC0"};
     const int size[6] = {2, 3, 4, 4, 3, 2};
 
@@ -130,7 +130,7 @@ TEST(TestCaUtf8Utils, Test_NumUtf8BytesForUtf8CharacterWithoutCheck_InvalidCodep
     }
 }
 
-TEST(TestCaUtf8Utils, Test_NumUtf8BytesForUtf8CharacterWithoutCheck_AssertIvalidInput) {
+TEST(CaUtf8UtilsTest, Test_NumUtf8BytesForUtf8CharacterWithoutCheck_AssertIvalidInput) {
     EXPECT_DEATH({
         num_utf8_bytes_for_utf8_character_without_check(nullptr);
     }, ".*")
@@ -139,7 +139,7 @@ TEST(TestCaUtf8Utils, Test_NumUtf8BytesForUtf8CharacterWithoutCheck_AssertIvalid
         << " but got no assertion failure.";
 }
 
-TEST(TestCaUtf8Utils, Test_NumUtf8BytesForCodepoint_ReturnValue) {
+TEST(CaUtf8UtilsTest, Test_NumUtf8BytesForCodepoint_ReturnValue) {
     for (const auto [utf8_bytes, size, utf32_code] : character_test_case) {
         int result = num_utf8_bytes_for_codepoint(utf32_code);
         EXPECT_EQ(result, size)
@@ -150,7 +150,7 @@ TEST(TestCaUtf8Utils, Test_NumUtf8BytesForCodepoint_ReturnValue) {
     }
 }
 
-TEST(TestCaUtf8Utils, Test_NumUtf8BytesForCodepoint_InvalidCodepoint) {
+TEST(CaUtf8UtilsTest, Test_NumUtf8BytesForCodepoint_InvalidCodepoint) {
     ca_char4_t invalid_codes[] = {
         0xD800, 0xDFFF, 0x110000, 0xFFFFFFFE, 0xFFFFFFFF
     };
@@ -247,7 +247,7 @@ StringTestCase string_test_case[] = {
     }
 };
 
-TEST(TestCaUtf8Utils, Test_NumCodepointsForUtf8BytesWithoutCheck_ReturnValue) {
+TEST(CaUtf8UtilsTest, Test_NumCodepointsForUtf8BytesWithoutCheck_ReturnValue) {
     for (const auto& test_case : string_test_case) {
         ca_size_t num_codepoints = 0;
         num_codepoints_for_utf8_bytes_without_check(test_case.utf8_string, test_case.size, &num_codepoints);
@@ -259,7 +259,7 @@ TEST(TestCaUtf8Utils, Test_NumCodepointsForUtf8BytesWithoutCheck_ReturnValue) {
     }
 }
 
-TEST(TestCaUtf8Utils, Test_NumCodepointsForUtf8BytesWithoutCheck_AssertInvalidInput) {
+TEST(CaUtf8UtilsTest, Test_NumCodepointsForUtf8BytesWithoutCheck_AssertInvalidInput) {
     const auto utf8_string = "A\xC3\xA9\xC2\xA2\xE2\x82\xAC\xE6\x96\x87"
                           "\xF0\x9F\x98\x8A\xF0\x90\x8D\x88~\xE2\x82\xBF"
                           "\xF4\x8F\xBF\xBF";
@@ -281,7 +281,7 @@ TEST(TestCaUtf8Utils, Test_NumCodepointsForUtf8BytesWithoutCheck_AssertInvalidIn
         << " but got no assertion failure.";
 }
 
-TEST(TestCaUtf8Utils, Test_NumCodepointsForUtf8Bytes_ReturnValue) {
+TEST(CaUtf8UtilsTest, Test_NumCodepointsForUtf8Bytes_ReturnValue) {
     for (const auto& test_case : string_test_case) {
         ca_size_t num_codepoints = 0;
         int result = num_codepoints_for_utf8_bytes(test_case.utf8_string, test_case.size, &num_codepoints);
@@ -298,7 +298,7 @@ TEST(TestCaUtf8Utils, Test_NumCodepointsForUtf8Bytes_ReturnValue) {
     }
 }
 
-TEST(TestCaUtf8Utils, Test_NumCodepointsForUtf8Bytes_EmptyInput) {
+TEST(CaUtf8UtilsTest, Test_NumCodepointsForUtf8Bytes_EmptyInput) {
     const auto* str = reinterpret_cast<const ca_char_t*>(""); // empty string
     ca_size_t num_codepoints = 123; // preset non-zero
     const int result = num_codepoints_for_utf8_bytes(str, 0, &num_codepoints);
@@ -315,7 +315,7 @@ TEST(TestCaUtf8Utils, Test_NumCodepointsForUtf8Bytes_EmptyInput) {
         << " but got: " << num_codepoints;
 }
 
-TEST(TestCaUtf8Utils, Test_NumCodepointsForUtf8Bytes_Invalid_BadStartByte) {
+TEST(CaUtf8UtilsTest, Test_NumCodepointsForUtf8Bytes_Invalid_BadStartByte) {
     constexpr unsigned char invalid_utf8[] = { 0xFF, 0xA0, 0x00 }; // invalid leading byte
     const auto str = reinterpret_cast<const ca_char_t *>(invalid_utf8);
     ca_size_t num_codepoints = 0;
@@ -328,7 +328,7 @@ TEST(TestCaUtf8Utils, Test_NumCodepointsForUtf8Bytes_Invalid_BadStartByte) {
         << " but got: " << result;
 }
 
-TEST(TestCaUtf8Utils, Test_NumCodepointsForUtf8Bytes_Invalid_BadContinuation) {
+TEST(CaUtf8UtilsTest, Test_NumCodepointsForUtf8Bytes_Invalid_BadContinuation) {
     constexpr unsigned char invalid_utf8[] = { 0xE2, 0x28, 0xA1, 0x00 }; // 0x28 not a valid continuation
     const auto str = reinterpret_cast<const ca_char_t *>(invalid_utf8);
     ca_size_t num_codepoints = 0;
@@ -341,7 +341,7 @@ TEST(TestCaUtf8Utils, Test_NumCodepointsForUtf8Bytes_Invalid_BadContinuation) {
         << " but got: " << result;
 }
 
-TEST(TestCaUtf8Utils, Test_NumCodepointsForUtf8Bytes_OverlongEncoding) {
+TEST(CaUtf8UtilsTest, Test_NumCodepointsForUtf8Bytes_OverlongEncoding) {
     constexpr unsigned char overlong[] = { 0xC0, 0xAF, 0x00 }; // overlong encoding for '/'
     const auto str = reinterpret_cast<const ca_char_t *>(overlong);
     ca_size_t num_codepoints = 0;
@@ -354,7 +354,7 @@ TEST(TestCaUtf8Utils, Test_NumCodepointsForUtf8Bytes_OverlongEncoding) {
         << " but got: " << result;
 }
 
-TEST(TestCaUtf8Utils, Test_NumCodepointsForUtf8Bytes_AssertInvalidInput) {
+TEST(CaUtf8UtilsTest, Test_NumCodepointsForUtf8Bytes_AssertInvalidInput) {
     const auto utf8_string = "A\xC3\xA9\xC2\xA2\xE2\x82\xAC\xE6\x96\x87"
                           "\xF0\x9F\x98\x8A\xF0\x90\x8D\x88~\xE2\x82\xBF"
                           "\xF4\x8F\xBF\xBF";
@@ -376,7 +376,7 @@ TEST(TestCaUtf8Utils, Test_NumCodepointsForUtf8Bytes_AssertInvalidInput) {
         << " but got no assertion failure.";
 }
 
-TEST(TestCaUtf8Utils, Test_Utf8BufferSize_ReturnValue) {
+TEST(CaUtf8UtilsTest, Test_Utf8BufferSize_ReturnValue) {
     for (const auto& test_case : string_test_case) {
         ca_size_t utf8_bytes = 0;
         int result = utf8_buffer_size(test_case.utf8_string, test_case.size, &utf8_bytes);
@@ -393,7 +393,7 @@ TEST(TestCaUtf8Utils, Test_Utf8BufferSize_ReturnValue) {
     }
 }
 
-TEST(TestCaUtf8Utils, Test_Utf8BufferSize_EmptyInput) {
+TEST(CaUtf8UtilsTest, Test_Utf8BufferSize_EmptyInput) {
     const auto* str = reinterpret_cast<const ca_char_t*>(""); // empty string
     ca_size_t utf8_bytes = 123; // preset non-zero
     const int result = utf8_buffer_size(str, 0, &utf8_bytes);
@@ -410,7 +410,7 @@ TEST(TestCaUtf8Utils, Test_Utf8BufferSize_EmptyInput) {
         << " but got: " << utf8_bytes;
 }
 
-TEST(TestCaUtf8Utils, Test_Utf8BufferSize_Invalid_BadStartByte) {
+TEST(CaUtf8UtilsTest, Test_Utf8BufferSize_Invalid_BadStartByte) {
     constexpr unsigned char invalid_utf8[] = { 0xFF, 0xA0, 0x00 }; // invalid leading byte
     const auto str = reinterpret_cast<const ca_char_t *>(invalid_utf8);
     ca_size_t utf8_bytes = 0;
@@ -423,7 +423,7 @@ TEST(TestCaUtf8Utils, Test_Utf8BufferSize_Invalid_BadStartByte) {
         << " but got: " << result;
 }
 
-TEST(TestCaUtf8Utils, Test_Utf8BufferSize_Invalid_BadContinuation) {
+TEST(CaUtf8UtilsTest, Test_Utf8BufferSize_Invalid_BadContinuation) {
     constexpr unsigned char invalid_utf8[] = { 0xE2, 0x28, 0xA1, 0x00 }; // 0x28 not a valid continuation
     const auto str = reinterpret_cast<const ca_char_t *>(invalid_utf8);
     ca_size_t utf8_bytes = 0;
@@ -436,7 +436,7 @@ TEST(TestCaUtf8Utils, Test_Utf8BufferSize_Invalid_BadContinuation) {
         << " but got: " << result;
 }
 
-TEST(TestCaUtf8Utils, Test_Utf8BufferSize_OverlongEncoding) {
+TEST(CaUtf8UtilsTest, Test_Utf8BufferSize_OverlongEncoding) {
     constexpr unsigned char overlong[] = { 0xC0, 0xAF, 0x00 }; // overlong encoding for '/'
     const auto str = reinterpret_cast<const ca_char_t *>(overlong);
     ca_size_t utf8_bytes = 0;
@@ -449,7 +449,7 @@ TEST(TestCaUtf8Utils, Test_Utf8BufferSize_OverlongEncoding) {
         << " but got: " << result;
 }
 
-TEST(TestCaUtf8Utils, Test_Utf8BufferSize_AssertInvalidInput) {
+TEST(CaUtf8UtilsTest, Test_Utf8BufferSize_AssertInvalidInput) {
     const auto utf8_string = "A\xC3\xA9\xC2\xA2\xE2\x82\xAC\xE6\x96\x87"
                           "\xF0\x9F\x98\x8A\xF0\x90\x8D\x88~\xE2\x82\xBF"
                           "\xF4\x8F\xBF\xBF";
@@ -471,7 +471,7 @@ TEST(TestCaUtf8Utils, Test_Utf8BufferSize_AssertInvalidInput) {
         << " but got no assertion failure.";
 }
 
-TEST(TestCaUtf8Utils, Test_Utf8SizeOfUtf32BufferEncode_ReturnValue) {
+TEST(CaUtf8UtilsTest, Test_Utf8SizeOfUtf32BufferEncode_ReturnValue) {
     for (const auto& test_case : string_test_case) {
         ca_size_t num_codepoints = 0;
         ca_size_t utf8_bytes = 0;
@@ -494,7 +494,7 @@ TEST(TestCaUtf8Utils, Test_Utf8SizeOfUtf32BufferEncode_ReturnValue) {
     }
 }
 
-TEST(TestCaUtf8Utils, Test_Utf8SizeOfUtf32BufferEncode_EmptyInput) {
+TEST(CaUtf8UtilsTest, Test_Utf8SizeOfUtf32BufferEncode_EmptyInput) {
     const auto* str = reinterpret_cast<const ca_char4_t*>(""); // empty string
     ca_size_t num_codepoints = 123;
     ca_size_t utf8_bytes = 123; // preset non-zero
@@ -517,7 +517,7 @@ TEST(TestCaUtf8Utils, Test_Utf8SizeOfUtf32BufferEncode_EmptyInput) {
         << " but got: " << utf8_bytes;
 }
 
-TEST(TestCaUtf8Utils, Test_Utf8SizeOfUtf32BufferEncode_InvalidCodepoints_ReturnsMinusOne) {
+TEST(CaUtf8UtilsTest, Test_Utf8SizeOfUtf32BufferEncode_InvalidCodepoints_ReturnsMinusOne) {
     constexpr ca_char4_t invalid_codepoints_1[] = { 0x110000 }; // out of range
     constexpr ca_char4_t invalid_codepoints_2[] = { 0xD800 };   // surrogate pair begin
     constexpr ca_char4_t invalid_codepoints_3[] = { 0xDFFF };   // surrogate pair end
@@ -565,7 +565,7 @@ TEST(TestCaUtf8Utils, Test_Utf8SizeOfUtf32BufferEncode_InvalidCodepoints_Returns
     }
 }
 
-TEST(TestCaUtf8Utils, Test_Utf8SizeOfUtf32BufferEncode_AssertInvalidInput) {
+TEST(CaUtf8UtilsTest, Test_Utf8SizeOfUtf32BufferEncode_AssertInvalidInput) {
 
     const auto* str = utf32_mixed;
     size_t num_codepoints;
@@ -606,7 +606,7 @@ ca_char_t* utf8_char_offset(ca_char_t* str, const int char_index) {
     return ptr;
 }
 
-TEST(TestCaUtf8Utils, Test_FindPreviousUtf8Character_ReturnValue) {
+TEST(CaUtf8UtilsTest, Test_FindPreviousUtf8Character_ReturnValue) {
     // UTF-8 string: "A¢€𐍈" = [0x41, 0xC2 0xA2, 0xE2 0x82 0xAC, 0xF0 0x90 0x8D 0x88]
     const auto* str = u8"A¢€𐍈";
     auto* utf8 = const_cast<ca_char_t *>(reinterpret_cast<const ca_char_t*>(str));
@@ -641,7 +641,7 @@ TEST(TestCaUtf8Utils, Test_FindPreviousUtf8Character_ReturnValue) {
     }
 }
 
-TEST(TestCaUtf8Utils, Test_FindPreviousUtf8Character_AssertInvalidInput) {
+TEST(CaUtf8UtilsTest, Test_FindPreviousUtf8Character_AssertInvalidInput) {
     const auto* str = u8"A¢€𐍈";
     auto* utf8 = const_cast<ca_char_t *>(reinterpret_cast<const ca_char_t*>(str)) + 5;
     ca_char_t* previous = nullptr;
@@ -661,7 +661,7 @@ TEST(TestCaUtf8Utils, Test_FindPreviousUtf8Character_AssertInvalidInput) {
         << " but got no assertion failure.";
 }
 
-TEST(TestCaUtf8Utils, Test_FindStartEndLocs_ReturnValue) {
+TEST(CaUtf8UtilsTest, Test_FindStartEndLocs_ReturnValue) {
     const auto* str = u8"A¢€𐍈";
     auto* utf8 = const_cast<ca_char_t *>(reinterpret_cast<const ca_char_t*>(str));
 
@@ -735,7 +735,7 @@ TEST(TestCaUtf8Utils, Test_FindStartEndLocs_ReturnValue) {
     }
 }
 
-TEST(TestCaUtf8Utils, Test_FindStartEndLocs_AssertInvalidInput) {
+TEST(CaUtf8UtilsTest, Test_FindStartEndLocs_AssertInvalidInput) {
     const auto* str = u8"A¢€𐍈";
     auto* utf8 = const_cast<ca_char_t *>(reinterpret_cast<const ca_char_t*>(str));
     constexpr ca_size_t buffer_size = 10;

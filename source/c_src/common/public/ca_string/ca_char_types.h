@@ -20,6 +20,12 @@ namespace ca::ca_string {
 typedef ca_uint8_t ca_char_t; /**< Raw character unit (single byte) */
 
 /**
+ * @typedef ca_char2_t
+ * @brief Represents a 2-byte character unit.
+ */
+typedef ca_uint16_t ca_char2_t;
+
+/**
  * @typedef ca_char4_t
  * @brief Represents a 4-byte character unit (a Unicode code point).
  *        This type is used for storing decoded characters as full Unicode code points.

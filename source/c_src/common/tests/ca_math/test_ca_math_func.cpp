@@ -13,7 +13,7 @@ using namespace ca;
 using namespace ca::ca_math;
 
 /* Test ca_max with same types (basic behavior) */
-TEST(TestCaMathFunc, Test_CaMax_ReturnValue) {
+TEST(CaMathFuncTest, Test_CaMax_ReturnValue) {
     EXPECT_EQ(ca_max(3, 5), 5);
     EXPECT_EQ(ca_max(10, 2), 10);
     EXPECT_EQ(ca_max(-3, -5), -3);
@@ -21,7 +21,7 @@ TEST(TestCaMathFunc, Test_CaMax_ReturnValue) {
 }
 
 /* Test ca_min with same types (basic behavior) */
-TEST(TestCaMathFunc, Test_CaMin_ReturnValue) {
+TEST(CaMathFuncTest, Test_CaMin_ReturnValue) {
     EXPECT_EQ(ca_min(3, 5), 3);
     EXPECT_EQ(ca_min(10, 2), 2);
     EXPECT_EQ(ca_min(-3, -5), -5);
@@ -29,7 +29,7 @@ TEST(TestCaMathFunc, Test_CaMin_ReturnValue) {
 }
 
 /* Test ca_max with different types (int + float) */
-TEST(TestCaMathFunc, Test_CaMax_MixedType) {
+TEST(CaMathFuncTest, Test_CaMax_MixedType) {
     constexpr auto result = ca_max<float>(3, 5.5f);  // explicit float to unify template type
     EXPECT_FLOAT_EQ(result, 5.5f);
 
@@ -38,7 +38,7 @@ TEST(TestCaMathFunc, Test_CaMax_MixedType) {
 }
 
 /* Test ca_min with different types (int + float) */
-TEST(TestCaMathFunc, Test_CaMin_MixedType) {
+TEST(CaMathFuncTest, Test_CaMin_MixedType) {
     constexpr auto result = ca_min<float>(3, 5.5f);  // template type unified to float
     EXPECT_FLOAT_EQ(result, 3.0f);
 
@@ -47,19 +47,19 @@ TEST(TestCaMathFunc, Test_CaMin_MixedType) {
 }
 
 /* Static assertions: ensure type constraints work as expected */
-TEST(TestCaMathFunc, Test_CaMax_TypeConstraints) {
+TEST(CaMathFuncTest, Test_CaMax_TypeConstraints) {
     static_assert(std::is_same_v<decltype(ca_max(1, 2)), int>);
     static_assert(std::is_same_v<decltype(ca_max(1.1, 2.2)), double>);
 }
 
 /* Static assertions: ensure type constraints work as expected */
-TEST(TestCaMathFunc, Test_CaMin_TypeConstraints) {
+TEST(CaMathFuncTest, Test_CaMin_TypeConstraints) {
     static_assert(std::is_same_v<decltype(ca_min(1, 2)), int>);
     static_assert(std::is_same_v<decltype(ca_min(1.1, 2.2)), double>);
 }
 
 /* Test safe downcast that stays within range */
-TEST(TestCaMathFunc, Test_CaSafeDowncast_ReturnValue) {
+TEST(CaMathFuncTest, Test_CaSafeDowncast_ReturnValue) {
     constexpr ca_int32_t wide_val = 123;
     constexpr auto casted_val = ca_safe_downcast<ca_int8_t>(wide_val);
     EXPECT_EQ(casted_val, 123);
@@ -70,7 +70,7 @@ TEST(TestCaMathFunc, Test_CaSafeDowncast_ReturnValue) {
 }
 
 /* Test that values within range do not trigger assertions */
-TEST(TestCaMathFunc, Test_CaSafeDowncast_AssertInRange) {
+TEST(CaMathFuncTest, Test_CaSafeDowncast_AssertInRange) {
     EXPECT_NO_FATAL_FAILURE({
         constexpr int val = 127;
         [[maybe_unused]] auto result = ca_safe_downcast<ca_int8_t>(val);
@@ -83,7 +83,7 @@ TEST(TestCaMathFunc, Test_CaSafeDowncast_AssertInRange) {
 }
 
 /* Test that out-of-range values correctly trigger assertion failure in debug mode */
-TEST(TestCaMathFunc, Test_CaSafeDowncast_AssertOutOfRange) {
+TEST(CaMathFuncTest, Test_CaSafeDowncast_AssertOutOfRange) {
     EXPECT_DEATH({
         constexpr int val = 99999;
         [[maybe_unused]] auto result = ca_safe_downcast<ca_int8_t>(val);

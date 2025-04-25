@@ -9,10 +9,9 @@
 
 extern "C" {
 #define UTF8PROC_STATIC
-#include "../../utf8proc/utf8proc.h"
+#include "../../../../third_party/utf8proc/utf8proc.h"
 }
 
-#include <Python.h>
 #include "ca_utf8_utils.h"
 
 namespace ca::ca_string {

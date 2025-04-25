@@ -27,7 +27,7 @@ constexpr ca_char4_t CHAR_TITLE_LJ = 0x01C8;          // ǈ
 // ca_getchar & ca_get_bytes
 // ===============================
 
-TEST(CACharTest, GetChar_ASCII) {
+TEST(CaCharTest, GetChar_ASCII) {
     constexpr ca_char_t ascii[] = { 'A', '\0' };
     int size = 0;
     const auto result = ca_getchar<ca_encoding_t::CA_ENCODING_ASCII>(ascii, &size);
@@ -35,13 +35,13 @@ TEST(CACharTest, GetChar_ASCII) {
     EXPECT_EQ(size, 1);
 }
 
-TEST(CACharTest, GetBytes_ASCII) {
+TEST(CaCharTest, GetBytes_ASCII) {
     constexpr ca_char_t ascii[] = { 'B', '\0' };
     const int size = ca_get_bytes<ca_encoding_t::CA_ENCODING_ASCII>(ascii);
     EXPECT_EQ(size, 1);
 }
 
-TEST(CACharTest, GetChar_UTF8) {
+TEST(CaCharTest, GetChar_UTF8) {
     constexpr ca_char_t utf8[4][5] = {
         { 0x41, '\0' },  // 'A'
         { 0xC3, 0xB1, '\0' }, // ñ
@@ -59,7 +59,7 @@ TEST(CACharTest, GetChar_UTF8) {
     }
 }
 
-TEST(CACharTest, GetBytes_UTF8) {
+TEST(CaCharTest, GetBytes_UTF8) {
     constexpr ca_char_t utf8[4][5] = {
         { 0x41, '\0' },  // 'A'
         { 0xC3, 0xB1, '\0' }, // ñ
@@ -76,7 +76,7 @@ TEST(CACharTest, GetBytes_UTF8) {
 }
 
 // UTF-32: Just extract the first 4 bytes as a code point
-TEST(CACharTest, GetChar_UTF32) {
+TEST(CaCharTest, GetChar_UTF32) {
     constexpr ca_char_t utf32_char[] = { 0x0D, 0xF4, 0x01, 0x00 }; // 0x1F40D (🐍) little endian
     int size = 0;
     const auto result = ca_getchar<ca_encoding_t::CA_ENCODING_UTF32>(utf32_char, &size);
@@ -84,7 +84,7 @@ TEST(CACharTest, GetChar_UTF32) {
     EXPECT_EQ(size, 4);
 }
 
-TEST(CACharTest, GetBytes_UTF32) {
+TEST(CaCharTest, GetBytes_UTF32) {
     constexpr ca_char_t utf32_char[] = { 0x0D, 0xF4, 0x01, 0x00 };
     const int size = ca_get_bytes<ca_encoding_t::CA_ENCODING_UTF32>(utf32_char);
     EXPECT_EQ(size, 4);
@@ -93,13 +93,13 @@ TEST(CACharTest, GetBytes_UTF32) {
 // ===============================
 // ca_isalpha
 // ===============================
-TEST(CACharTest, IsAlpha_True) {
+TEST(CaCharTest, IsAlpha_True) {
     EXPECT_TRUE(ca_isalpha<ca_encoding_t::CA_ENCODING_ASCII>('B'));
     EXPECT_TRUE(ca_isalpha<ca_encoding_t::CA_ENCODING_UTF8>(CHAR_GREEK_ALPHA));
     EXPECT_TRUE(ca_isalpha<ca_encoding_t::CA_ENCODING_UTF32>(CHAR_HIRAGANA_A));
 }
 
-TEST(CACharTest, IsAlpha_False) {
+TEST(CaCharTest, IsAlpha_False) {
     EXPECT_FALSE(ca_isalpha<ca_encoding_t::CA_ENCODING_ASCII>('3'));
     EXPECT_FALSE(ca_isalpha<ca_encoding_t::CA_ENCODING_UTF8>(CHAR_DIGIT_ONE));
     EXPECT_FALSE(ca_isalpha<ca_encoding_t::CA_ENCODING_UTF32>(CHAR_SPACE));
@@ -108,13 +108,13 @@ TEST(CACharTest, IsAlpha_False) {
 // ===============================
 // ca_isdigit
 // ===============================
-TEST(CACharTest, IsDigit_True) {
+TEST(CaCharTest, IsDigit_True) {
     EXPECT_TRUE(ca_isdigit<ca_encoding_t::CA_ENCODING_ASCII>('5'));
     EXPECT_TRUE(ca_isdigit<ca_encoding_t::CA_ENCODING_UTF8>(CHAR_ARABIC_NUMERAL));
     EXPECT_TRUE(ca_isdigit<ca_encoding_t::CA_ENCODING_UTF32>('2'));
 }
 
-TEST(CACharTest, IsDigit_False) {
+TEST(CaCharTest, IsDigit_False) {
     EXPECT_FALSE(ca_isdigit<ca_encoding_t::CA_ENCODING_UTF8>(CHAR_GREEK_ALPHA));
     EXPECT_FALSE(ca_isdigit<ca_encoding_t::CA_ENCODING_UTF32>(CHAR_EN_DASH));
 }
@@ -122,13 +122,13 @@ TEST(CACharTest, IsDigit_False) {
 // ===============================
 // ca_isspace
 // ===============================
-TEST(CACharTest, IsSpace_True) {
+TEST(CaCharTest, IsSpace_True) {
     EXPECT_TRUE(ca_isspace<ca_encoding_t::CA_ENCODING_ASCII>(' '));
     EXPECT_TRUE(ca_isspace<ca_encoding_t::CA_ENCODING_UTF8>('\t'));
     EXPECT_TRUE(ca_isspace<ca_encoding_t::CA_ENCODING_UTF32>('\n'));
 }
 
-TEST(CACharTest, IsSpace_False) {
+TEST(CaCharTest, IsSpace_False) {
     EXPECT_FALSE(ca_isspace<ca_encoding_t::CA_ENCODING_UTF8>('Z'));
     EXPECT_FALSE(ca_isspace<ca_encoding_t::CA_ENCODING_UTF32>(CHAR_HIRAGANA_A));
 }
@@ -136,13 +136,13 @@ TEST(CACharTest, IsSpace_False) {
 // ===============================
 // ca_isalnum
 // ===============================
-TEST(CACharTest, IsAlnum_True) {
+TEST(CaCharTest, IsAlnum_True) {
     EXPECT_TRUE(ca_isalnum<ca_encoding_t::CA_ENCODING_ASCII>('G'));
     EXPECT_TRUE(ca_isalnum<ca_encoding_t::CA_ENCODING_UTF8>('3'));
     EXPECT_TRUE(ca_isalnum<ca_encoding_t::CA_ENCODING_UTF32>(CHAR_GREEK_ALPHA));
 }
 
-TEST(CACharTest, IsAlnum_False) {
+TEST(CaCharTest, IsAlnum_False) {
     EXPECT_FALSE(ca_isalnum<ca_encoding_t::CA_ENCODING_UTF8>(CHAR_EN_DASH));
     EXPECT_FALSE(ca_isalnum<ca_encoding_t::CA_ENCODING_UTF32>('!'));
 }
@@ -150,12 +150,12 @@ TEST(CACharTest, IsAlnum_False) {
 // ===============================
 // ca_islower
 // ===============================
-TEST(CACharTest, IsLower_True) {
+TEST(CaCharTest, IsLower_True) {
     EXPECT_TRUE(ca_islower<ca_encoding_t::CA_ENCODING_ASCII>('z'));
     EXPECT_TRUE(ca_islower<ca_encoding_t::CA_ENCODING_UTF8>('m'));
 }
 
-TEST(CACharTest, IsLower_False) {
+TEST(CaCharTest, IsLower_False) {
     EXPECT_FALSE(ca_islower<ca_encoding_t::CA_ENCODING_UTF8>('Q'));
     EXPECT_FALSE(ca_islower<ca_encoding_t::CA_ENCODING_UTF32>('1'));
 }
@@ -163,13 +163,13 @@ TEST(CACharTest, IsLower_False) {
 // ===============================
 // ca_isupper
 // ===============================
-TEST(CACharTest, IsUpper_True) {
+TEST(CaCharTest, IsUpper_True) {
     EXPECT_TRUE(ca_isupper<ca_encoding_t::CA_ENCODING_ASCII>('H'));
     EXPECT_TRUE(ca_isupper<ca_encoding_t::CA_ENCODING_UTF8>('D'));
     EXPECT_TRUE(ca_isupper<ca_encoding_t::CA_ENCODING_UTF32>(CHAR_GREEK_ALPHA));
 }
 
-TEST(CACharTest, IsUpper_False) {
+TEST(CaCharTest, IsUpper_False) {
     EXPECT_FALSE(ca_isupper<ca_encoding_t::CA_ENCODING_UTF8>('f'));
     EXPECT_FALSE(ca_isupper<ca_encoding_t::CA_ENCODING_UTF32>(CHAR_ROMAN_NUMERAL_IV));
 }
@@ -177,12 +177,12 @@ TEST(CACharTest, IsUpper_False) {
 // ===============================
 // ca_istitle
 // ===============================
-TEST(CACharTest, IsTitle_True) {
+TEST(CaCharTest, IsTitle_True) {
     EXPECT_TRUE(ca_istitle<ca_encoding_t::CA_ENCODING_UTF8>(CHAR_TITLE_LJ));
     EXPECT_TRUE(ca_istitle<ca_encoding_t::CA_ENCODING_UTF32>(CHAR_TITLE_DZ));
 }
 
-TEST(CACharTest, IsTitle_False) {
+TEST(CaCharTest, IsTitle_False) {
     EXPECT_FALSE(ca_istitle<ca_encoding_t::CA_ENCODING_UTF8>('g'));
     EXPECT_FALSE(ca_istitle<ca_encoding_t::CA_ENCODING_UTF32>('2'));
 }
@@ -190,26 +190,26 @@ TEST(CACharTest, IsTitle_False) {
 // ===============================
 // ca_isnumeric
 // ===============================
-TEST(CACharTest, IsNumeric_True) {
+TEST(CaCharTest, IsNumeric_True) {
     EXPECT_TRUE(ca_isnumeric<ca_encoding_t::CA_ENCODING_ASCII>('7'));
     EXPECT_TRUE(ca_isnumeric<ca_encoding_t::CA_ENCODING_UTF8>('0'));
     EXPECT_TRUE(ca_isnumeric<ca_encoding_t::CA_ENCODING_UTF32>(CHAR_ROMAN_NUMERAL_IV));
 }
 
-TEST(CACharTest, IsNumeric_False) {
+TEST(CaCharTest, IsNumeric_False) {
     EXPECT_FALSE(ca_isnumeric<ca_encoding_t::CA_ENCODING_UTF8>(CHAR_HIRAGANA_A));
 }
 
 // ===============================
 // ca_isdecimal
 // ===============================
-TEST(CACharTest, IsDecimal_True) {
+TEST(CaCharTest, IsDecimal_True) {
     EXPECT_TRUE(ca_isdecimal<ca_encoding_t::CA_ENCODING_ASCII>('1'));
     EXPECT_TRUE(ca_isdecimal<ca_encoding_t::CA_ENCODING_UTF8>('2'));
     EXPECT_TRUE(ca_isdecimal<ca_encoding_t::CA_ENCODING_UTF32>('9'));
 }
 
-TEST(CACharTest, IsDecimal_False) {
+TEST(CaCharTest, IsDecimal_False) {
     EXPECT_FALSE(ca_isdecimal<ca_encoding_t::CA_ENCODING_UTF32>(CHAR_ROMAN_NUMERAL_IV));
     EXPECT_FALSE(ca_isdecimal<ca_encoding_t::CA_ENCODING_UTF32>(CHAR_EN_DASH));
 }
@@ -217,7 +217,7 @@ TEST(CACharTest, IsDecimal_False) {
 // ===============================
 // ca_char_check dispatcher tests
 // ===============================
-TEST(CACharTest, CharCheckDispatcher_ValidCases) {
+TEST(CaCharTest, CharCheckDispatcher_ValidCases) {
     EXPECT_TRUE((ca_char_check<ca_encoding_t::CA_ENCODING_UTF8, ca_char_check_types::CA_ISALPHA>('A')));
     EXPECT_TRUE((ca_char_check<ca_encoding_t::CA_ENCODING_UTF32, ca_char_check_types::CA_ISDIGIT>('3')));
     EXPECT_FALSE((ca_char_check<ca_encoding_t::CA_ENCODING_UTF8, ca_char_check_types::CA_ISSPACE>('X')));
