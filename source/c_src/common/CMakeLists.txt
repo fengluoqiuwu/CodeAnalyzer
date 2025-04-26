@@ -80,7 +80,7 @@ endif()
 
 # Collect Platform Library sources
 set(CA_PLATFORM_SOURCES
-        private/ca_platform/temp.cpp
+        private/ca_platform/file/${CA_PLATFORM_API_NAME}/file.cpp
 )
 
 # Collect Platform Library headers to be installed
