@@ -37,6 +37,7 @@ target_include_directories(ca_misc
 # ================================
 # Collect Math Library sources
 set(CA_MATH_SOURCES
+        private/ca_math/temp.cpp
         private/ca_math/ca_math_func.tpp
 )
 
@@ -81,6 +82,9 @@ endif()
 # Collect Platform Library sources
 set(CA_PLATFORM_SOURCES
         private/ca_platform/file/${CA_PLATFORM_API_NAME}/file.cpp
+        private/ca_platform/file/${CA_PLATFORM_API_NAME}/file_error.cpp
+        private/ca_platform/file/${CA_PLATFORM_API_NAME}/file_path.cpp
+        private/ca_platform/file/${CA_PLATFORM_API_NAME}/file_temp.cpp
 )
 
 # Collect Platform Library headers to be installed

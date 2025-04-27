@@ -464,7 +464,7 @@ int init_article(const char c[], ca_char_t* char_p, ca_char2_t* char2_p, ca_char
 
 int tmp = init_article(article, article_char, article_char2, article_char4);
 
-#define LOG_RUNNING_TIME
+// #define LOG_RUNNING_TIME
 
 #ifndef LOG_RUNNING_TIME
 #define LOG_RUNNING_TIME_UTILS(code, times)

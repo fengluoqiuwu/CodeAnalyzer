@@ -5,7 +5,6 @@
 // @brief Implementation of UTF-8 utility functions, modified from NumPy utf8_utils.cpp.
 // ================================
 
-#include <Python.h>
 #include <cassert>
 
 #include "ca_utf8_utils.h"

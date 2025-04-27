@@ -6,87 +6,13 @@
 // ================================
 
 #include <windows.h>
+#include "file/file.h"
 #include "file/file_defs.h"
+#include "internal/win32_translater.h"
 
 namespace ca::ca_file {
 
 typedef HANDLE ca_file_handle;
-
-static DWORD ca_internal_translate_access(const ca_file_mode mode) {
-    switch (mode) {
-        case ca_file_mode::FILE_MODE_READ:
-        case ca_file_mode::FILE_MODE_READ_EXISTING:
-            return GENERIC_READ;
-
-        case ca_file_mode::FILE_MODE_WRITE:
-        case ca_file_mode::FILE_MODE_WRITE_EXISTING:
-        case ca_file_mode::FILE_MODE_TRUNCATE_WRITE:
-            return GENERIC_WRITE;
-
-        case ca_file_mode::FILE_MODE_APPEND:
-        case ca_file_mode::FILE_MODE_APPEND_EXISTING:
-            return FILE_APPEND_DATA;
-
-        case ca_file_mode::FILE_MODE_READ_WRITE:
-        case ca_file_mode::FILE_MODE_READ_WRITE_EXISTING:
-        case ca_file_mode::FILE_MODE_TRUNCATE_READ_WRITE:
-            return GENERIC_READ | GENERIC_WRITE;
-
-        default:
-            return GENERIC_READ;
-    }
-}
-
-static DWORD ca_internal_translate_creation(const ca_file_mode mode) {
-    switch (mode) {
-        case ca_file_mode::FILE_MODE_READ:
-        case ca_file_mode::FILE_MODE_READ_EXISTING:
-        case ca_file_mode::FILE_MODE_WRITE_EXISTING:
-        case ca_file_mode::FILE_MODE_READ_WRITE_EXISTING:
-        case ca_file_mode::FILE_MODE_APPEND_EXISTING:
-            return OPEN_EXISTING;
-
-        case ca_file_mode::FILE_MODE_WRITE:
-            return CREATE_ALWAYS;
-
-        case ca_file_mode::FILE_MODE_APPEND:
-        case ca_file_mode::FILE_MODE_READ_WRITE:
-            return OPEN_ALWAYS;
-
-        case ca_file_mode::FILE_MODE_TRUNCATE_WRITE:
-        case ca_file_mode::FILE_MODE_TRUNCATE_READ_WRITE:
-            return TRUNCATE_EXISTING;
-
-        default:
-            return OPEN_EXISTING;
-    }
-}
-
-static ca_file_result ca_internal_translate_win32_error(const DWORD err) {
-    switch (err) {
-        case ERROR_SUCCESS: return ca_file_result::FILE_OK;
-        case ERROR_FILE_NOT_FOUND:
-        case ERROR_PATH_NOT_FOUND: return ca_file_result::FILE_ERROR_NOT_FOUND;
-        case ERROR_ACCESS_DENIED: return ca_file_result::FILE_ERROR_ACCESS_DENIED;
-        case ERROR_ALREADY_EXISTS:
-        case ERROR_FILE_EXISTS: return ca_file_result::FILE_ERROR_ALREADY_EXISTS;
-        case ERROR_INVALID_HANDLE: return ca_file_result::FILE_ERROR_INVALID_HANDLE;
-        case ERROR_GEN_FAILURE:
-        case ERROR_WRITE_FAULT:
-        case ERROR_READ_FAULT:
-        case ERROR_SECTOR_NOT_FOUND: return ca_file_result::FILE_ERROR_IO_ERROR;
-        case ERROR_NOT_ENOUGH_MEMORY:
-        case ERROR_OUTOFMEMORY: return ca_file_result::FILE_ERROR_OUT_OF_MEMORY;
-        case ERROR_INVALID_PARAMETER: return ca_file_result::FILE_ERROR_INVALID_PARAMETER;
-        case ERROR_NOT_SUPPORTED: return ca_file_result::FILE_ERROR_NOT_SUPPORTED;
-        case ERROR_DISK_FULL: return ca_file_result::FILE_ERROR_DISK_FULL;
-        case ERROR_BUSY:
-        case ERROR_DEVICE_IN_USE:
-        case ERROR_SHARING_VIOLATION: return ca_file_result::FILE_ERROR_BUSY; // file in use
-        case ERROR_WRITE_PROTECT: return ca_file_result::FILE_ERROR_ACCESS_DENIED; // write-protected disk
-        default: return ca_file_result::FILE_ERROR_GENERIC;
-    }
-}
 
 ca_file_handle ca_file_open(const char* path, const ca_file_mode mode, ca_file_result* result) {
     if (!path) {
@@ -96,8 +22,8 @@ ca_file_handle ca_file_open(const char* path, const ca_file_mode mode, ca_file_r
         return nullptr;
     }
 
-    const DWORD access = ca_internal_translate_access(mode);
-    const DWORD creation = ca_internal_translate_creation(mode);
+    const DWORD access = internal::ca_translate_access(mode);
+    const DWORD creation = internal::ca_translate_creation(mode);
 
     // ReSharper disable once CppLocalVariableMayBeConst
     HANDLE hFile = CreateFileA(
@@ -120,7 +46,7 @@ ca_file_handle ca_file_open(const char* path, const ca_file_mode mode, ca_file_r
         return hFile;
     } else {
         if (result) {
-            *result = ca_internal_translate_win32_error(GetLastError());
+            *result = internal::ca_translate_win32_error(GetLastError());
         }
         return nullptr;
     }
@@ -140,7 +66,7 @@ void ca_file_close(const ca_file_handle file, ca_file_result* result) {
         }
     } else {
         if (result) {
-            *result = ca_internal_translate_win32_error(GetLastError());
+            *result = internal::ca_translate_win32_error(GetLastError());
         }
     }
 }
@@ -161,7 +87,7 @@ ca_size_t ca_file_read(const ca_file_handle file, void* buffer, const ca_size_t 
         return read_bytes;
     } else {
         if (result) {
-            *result = ca_internal_translate_win32_error(GetLastError());
+            *result = internal::ca_translate_win32_error(GetLastError());
         }
         return 0;
     }
@@ -183,7 +109,7 @@ ca_size_t ca_file_write(const ca_file_handle file, const void* buffer, const ca_
         return written_bytes;
     } else {
         if (result) {
-            *result = ca_internal_translate_win32_error(GetLastError());
+            *result = internal::ca_translate_win32_error(GetLastError());
         }
         return 0;
     }
@@ -204,7 +130,7 @@ int ca_file_seek(const ca_file_handle file, const long offset, const ca_file_see
     const DWORD pos = SetFilePointer(file, offset, nullptr, moveMethod);
     if (pos == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR) {
         if (result) {
-            *result = ca_internal_translate_win32_error(GetLastError());
+            *result = internal::ca_translate_win32_error(GetLastError());
         }
         return -1;
     }
@@ -226,7 +152,7 @@ long ca_file_tell(const ca_file_handle file, ca_file_result* result) {
     const DWORD pos = SetFilePointer(file, 0, nullptr, FILE_CURRENT);
     if (pos == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR) {
         if (result) {
-            *result = ca_internal_translate_win32_error(GetLastError());
+            *result = internal::ca_translate_win32_error(GetLastError());
         }
         return -1;
     }
@@ -247,7 +173,7 @@ int ca_file_flush(const ca_file_handle file, ca_file_result* result) {
 
     if (!FlushFileBuffers(file)) {
         if (result) {
-            *result = ca_internal_translate_win32_error(GetLastError());
+            *result = internal::ca_translate_win32_error(GetLastError());
         }
         return -1;
     }
@@ -268,7 +194,7 @@ ca_size_t ca_file_get_size(const ca_file_handle file, ca_file_result* result) {
 
     LARGE_INTEGER size;
     if (!GetFileSizeEx(file, &size)) {
-        if (result) *result = ca_internal_translate_win32_error(GetLastError());
+        if (result) *result = internal::ca_translate_win32_error(GetLastError());
         return 0;
     }
 
@@ -291,7 +217,7 @@ bool ca_file_exists(const char* path, ca_file_result* result) {
                 *result = ca_file_result::FILE_ERROR_NOT_FOUND;
             }
             else {
-                *result = ca_internal_translate_win32_error(err);
+                *result = internal::ca_translate_win32_error(err);
             }
         }
         return false;
@@ -310,7 +236,7 @@ ca_file_result ca_file_get_info(const char* path, ca_file_info* info_out) {
 
     WIN32_FILE_ATTRIBUTE_DATA data;
     if (!GetFileAttributesExA(path, GetFileExInfoStandard, &data)) {
-        return ca_internal_translate_win32_error(GetLastError());
+        return internal::ca_translate_win32_error(GetLastError());
     }
 
     info_out->size_bytes = (static_cast<uint64_t>(data.nFileSizeHigh) << 32) | data.nFileSizeLow;
@@ -331,7 +257,7 @@ ca_file_result ca_file_delete(const char* path) {
     if (DeleteFileA(path)) {
         return ca_file_result::FILE_OK;
     } else {
-        return ca_internal_translate_win32_error(GetLastError());
+        return internal::ca_translate_win32_error(GetLastError());
     }
 }
 
@@ -342,7 +268,7 @@ ca_file_result ca_file_copy(const char* src, const char* dst, const bool overwri
     if (CopyFileA(src, dst, overwrite ? FALSE : TRUE)) {
         return ca_file_result::FILE_OK;
     } else {
-        return ca_internal_translate_win32_error(GetLastError());
+        return internal::ca_translate_win32_error(GetLastError());
     }
 }
 
@@ -359,7 +285,7 @@ ca_file_result ca_file_move(const char* src, const char* dst, const bool overwri
     if (MoveFileExA(src, dst, flags)) {
         return ca_file_result::FILE_OK;
     } else {
-        return ca_internal_translate_win32_error(GetLastError());
+        return internal::ca_translate_win32_error(GetLastError());
     }
 }
 
@@ -371,7 +297,7 @@ ca_file_result ca_file_rename(const char* old_name, const char* new_name) {
     if (MoveFileExA(old_name, new_name, MOVEFILE_COPY_ALLOWED)) {
         return ca_file_result::FILE_OK;
     } else {
-        return ca_internal_translate_win32_error(GetLastError());
+        return internal::ca_translate_win32_error(GetLastError());
     }
 }
 

@@ -192,8 +192,6 @@ const ca_char4_t utf32_mixed[] = {
     0x10FFFF     // max unicode
 };
 
-constexpr ca_char4_t utf32_empty[] = {};
-
 constexpr ca_char4_t utf32_ascii[] = {
     'H', 'e', 'l', 'l', 'o', 'W', 'o', 'r', 'l', 'd'
 };
@@ -223,7 +221,7 @@ StringTestCase string_test_case[] = {
     },
     {
         "",
-        0, utf32_empty, 0
+        0, utf32_mixed, 0
     },
     {
         "HelloWorld",

@@ -146,9 +146,12 @@ ca_isdigit<ca_encoding_t::CA_ENCODING_UTF8>(const ca_char4_t c) {
         case 0x00B9: // ¹
         case 0x1369: case 0x136A: case 0x136B: case 0x136C: case 0x136D:
         case 0x136E: case 0x136F: case 0x1370: case 0x1371: // Ethiopic digits 1-9
-        case 0x2460 ... 0x2468: // Circled numbers 1-9
-        case 0x2474 ... 0x247C: // Parenthesized digits 1-9
-        case 0x2488 ... 0x2490: // Fullwidth circled 1-9
+        case 0x2460: case 0x2461: case 0x2462: case 0x2463: case 0x2464:
+        case 0x2465: case 0x2466: case 0x2467: case 0x2468: // Circled numbers 1-9
+        case 0x2474: case 0x2475: case 0x2476: case 0x2477: case 0x2478:
+        case 0x2479: case 0x247A: case 0x247B: case 0x247C: // Parenthesized digits 1-9
+        case 0x2488: case 0x2489: case 0x248A: case 0x248B: case 0x248C:
+        case 0x248D: case 0x248E: case 0x248F: case 0x2490: // Fullwidth circled 1-9
             return true;
         default:
             return false;
@@ -168,9 +171,12 @@ ca_isdigit<ca_encoding_t::CA_ENCODING_UTF32>(const ca_char4_t c) {
         case 0x00B9: // ¹
         case 0x1369: case 0x136A: case 0x136B: case 0x136C: case 0x136D:
         case 0x136E: case 0x136F: case 0x1370: case 0x1371: // Ethiopic digits 1-9
-        case 0x2460 ... 0x2468: // Circled numbers 1-9
-        case 0x2474 ... 0x247C: // Parenthesized digits 1-9
-        case 0x2488 ... 0x2490: // Fullwidth circled 1-9
+        case 0x2460: case 0x2461: case 0x2462: case 0x2463: case 0x2464:
+        case 0x2465: case 0x2466: case 0x2467: case 0x2468: // Circled numbers 1-9
+        case 0x2474: case 0x2475: case 0x2476: case 0x2477: case 0x2478:
+        case 0x2479: case 0x247A: case 0x247B: case 0x247C: // Parenthesized digits 1-9
+        case 0x2488: case 0x2489: case 0x248A: case 0x248B: case 0x248C:
+        case 0x248D: case 0x248E: case 0x248F: case 0x2490: // Fullwidth circled 1-9
             return true;
         default:
             return false;

@@ -8,67 +8,11 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include "file/file.h"
 #include "file/file_defs.h"
+#include "internal/posix_translater.h"
 
 namespace ca::ca_file {
-
-static int ca_internal_translate_open_flags(const ca_file_mode mode) {
-    switch (mode) {
-        case ca_file_mode::FILE_MODE_READ:
-        case ca_file_mode::FILE_MODE_READ_EXISTING:
-            return O_RDONLY;
-
-        case ca_file_mode::FILE_MODE_WRITE:
-            return O_WRONLY | O_CREAT | O_TRUNC;
-
-        case ca_file_mode::FILE_MODE_APPEND:
-            return O_WRONLY | O_CREAT | O_APPEND;
-
-        case ca_file_mode::FILE_MODE_READ_WRITE:
-            return O_RDWR | O_CREAT;
-
-        case ca_file_mode::FILE_MODE_WRITE_EXISTING:
-            return O_WRONLY;
-
-        case ca_file_mode::FILE_MODE_READ_WRITE_EXISTING:
-            return O_RDWR;
-
-        case ca_file_mode::FILE_MODE_APPEND_EXISTING:
-            return O_WRONLY | O_APPEND;
-
-        case ca_file_mode::FILE_MODE_TRUNCATE_WRITE:
-            return O_WRONLY | O_TRUNC;
-
-        case ca_file_mode::FILE_MODE_TRUNCATE_READ_WRITE:
-            return O_RDWR | O_TRUNC;
-
-        default:
-            return O_RDONLY;
-    }
-}
-
-static ca_file_result ca_internal_translate_errno(int err) {
-    switch (err) {
-        case 0: return ca_file_result::FILE_OK;
-        case ENOENT: return ca_file_result::FILE_ERROR_NOT_FOUND;
-        case EACCES: return ca_file_result::FILE_ERROR_ACCESS_DENIED;
-        case EEXIST: return ca_file_result::FILE_ERROR_ALREADY_EXISTS;
-        case EBADF: return ca_file_result::FILE_ERROR_INVALID_HANDLE;
-        case EIO: return ca_file_result::FILE_ERROR_IO_ERROR;
-        case ENOMEM: return ca_file_result::FILE_ERROR_OUT_OF_MEMORY;
-        case EINVAL: return ca_file_result::FILE_ERROR_INVALID_PARAMETER;
-        case ENOTSUP: return ca_file_result::FILE_ERROR_NOT_SUPPORTED;
-        case EROFS: return ca_file_result::FILE_ERROR_ACCESS_DENIED; // read-only file system
-        case ENOSPC: return ca_file_result::FILE_ERROR_DISK_FULL;
-        case EBUSY: return ca_file_result::FILE_ERROR_BUSY;
-        case EPERM: return ca_file_result::FILE_ERROR_ACCESS_DENIED;
-        case EFAULT: return ca_file_result::FILE_ERROR_INVALID_PARAMETER;
-        case EISDIR: return ca_file_result::FILE_ERROR_ACCESS_DENIED; // try open dir as file
-        case ENFILE: return ca_file_result::FILE_ERROR_OUT_OF_MEMORY; // too many open files
-        case EMFILE: return ca_file_result::FILE_ERROR_OUT_OF_MEMORY; // process file descriptor limit
-        default: return ca_file_result::FILE_ERROR_GENERIC;
-    }
-}
 
 ca_file_handle ca_file_open(const char* path, ca_file_mode mode, ca_file_result* result) {
     if (!path) {
@@ -76,13 +20,13 @@ ca_file_handle ca_file_open(const char* path, ca_file_mode mode, ca_file_result*
         return NULL;
     }
 
-    int flags = ca_internal_translate_open_flags(mode);
+    int flags = internal::ca_translate_open_flags(mode);
     int fd = open(path, flags, 0666);
     if (fd >= 0) {
         if (result) *result = ca_file_result::FILE_OK;
         return (void*)(intptr_t)fd;
     } else {
-        if (result) *result = ca_internal_translate_errno(errno);
+        if (result) *result = internal::ca_translate_errno(errno);
         return NULL;
     }
 }
@@ -96,7 +40,7 @@ void ca_file_close(ca_file_handle file, ca_file_result* result) {
     if (close(fd) == 0) {
         if (result) *result = ca_file_result::FILE_OK;
     } else {
-        if (result) *result = ca_internal_translate_errno(errno);
+        if (result) *result = internal::ca_translate_errno(errno);
     }
 }
 
@@ -112,7 +56,7 @@ ca_size_t ca_file_read(ca_file_handle file, void* buffer, ca_size_t bytes, ca_fi
         if (result) *result = ca_file_result::FILE_OK;
         return (ca_size_t)n;
     } else {
-        if (result) *result = ca_internal_translate_errno(errno);
+        if (result) *result = internal::ca_translate_errno(errno);
         return 0;
     }
 }
@@ -129,7 +73,7 @@ ca_size_t ca_file_write(ca_file_handle file, const void* buffer, ca_size_t bytes
         if (result) *result = ca_file_result::FILE_OK;
         return (ca_size_t)n;
     } else {
-        if (result) *result = ca_internal_translate_errno(errno);
+        if (result) *result = internal::ca_translate_errno(errno);
         return 0;
     }
 }
@@ -146,7 +90,7 @@ int ca_file_seek(ca_file_handle file, long offset, ca_file_seek_origin origin, c
                  SEEK_END;
 
     if (lseek(fd, offset, whence) == (off_t)-1) {
-        if (result) *result = ca_internal_translate_errno(errno);
+        if (result) *result = internal::ca_translate_errno(errno);
         return -1;
     }
 
@@ -163,7 +107,7 @@ long ca_file_tell(ca_file_handle file, ca_file_result* result) {
     int fd = (int)(intptr_t)file;
     off_t pos = lseek(fd, 0, SEEK_CUR);
     if (pos == (off_t)-1) {
-        if (result) *result = ca_internal_translate_errno(errno);
+        if (result) *result = internal::ca_translate_errno(errno);
         return -1;
     }
 
@@ -179,7 +123,7 @@ int ca_file_flush(ca_file_handle file, ca_file_result* result) {
 
     int fd = (int)(intptr_t)file;
     if (fsync(fd) != 0) {
-        if (result) *result = ca_internal_translate_errno(errno);
+        if (result) *result = internal::ca_translate_errno(errno);
         return -1;
     }
 
@@ -196,7 +140,7 @@ ca_size_t ca_file_get_size(ca_file_handle file, ca_file_result* result) {
     int fd = (int)(intptr_t)file;
     struct stat st;
     if (fstat(fd, &st) != 0) {
-        if (result) *result = ca_internal_translate_errno(errno);
+        if (result) *result = internal::ca_translate_errno(errno);
         return 0;
     }
 
@@ -218,7 +162,7 @@ bool ca_file_exists(const char* path, ca_file_result* result) {
             if (errno == ENOENT || errno == ENOTDIR)
                 *result = ca_file_result::FILE_ERROR_NOT_FOUND;
             else
-                *result = ca_internal_translate_errno(errno);
+                *result = internal::ca_translate_errno(errno);
         }
         return false;
     }
@@ -231,7 +175,7 @@ ca_file_result ca_file_get_info(const char* path, ca_file_info* info_out) {
 
     struct stat st;
     if (stat(path, &st) != 0) {
-        return ca_internal_translate_errno(errno);
+        return internal::ca_translate_errno(errno);
     }
 
     info_out->size_bytes = (size_t)st.st_size;
@@ -253,7 +197,7 @@ ca_file_result ca_file_delete(const char* path) {
     if (unlink(path) == 0) {
         return ca_file_result::FILE_OK;
     } else {
-        return ca_internal_translate_errno(errno);
+        return internal::ca_translate_errno(errno);
     }
 }
 
@@ -261,7 +205,7 @@ ca_file_result ca_file_copy(const char* src, const char* dst, bool overwrite) {
     if (!src || !dst) return ca_file_result::FILE_ERROR_INVALID_PARAMETER;
 
     int src_fd = open(src, O_RDONLY);
-    if (src_fd < 0) return ca_internal_translate_errno(errno);
+    if (src_fd < 0) return internal::ca_translate_errno(errno);
 
     int dst_flags = O_WRONLY | O_CREAT;
     if (!overwrite) {
@@ -271,7 +215,7 @@ ca_file_result ca_file_copy(const char* src, const char* dst, bool overwrite) {
     int dst_fd = open(dst, dst_flags, 0666);
     if (dst_fd < 0) {
         close(src_fd);
-        return ca_internal_translate_errno(errno);
+        return internal::ca_translate_errno(errno);
     }
 
     char buffer[4096];
@@ -287,7 +231,7 @@ ca_file_result ca_file_copy(const char* src, const char* dst, bool overwrite) {
             } else {
                 close(src_fd);
                 close(dst_fd);
-                return ca_internal_translate_errno(errno);
+                return internal::ca_translate_errno(errno);
             }
         } while (nread > 0);
     }
@@ -296,7 +240,7 @@ ca_file_result ca_file_copy(const char* src, const char* dst, bool overwrite) {
     close(dst_fd);
 
     if (nread < 0) {
-        return ca_internal_translate_errno(errno);
+        return internal::ca_translate_errno(errno);
     }
 
     return ca_file_result::FILE_OK;
@@ -312,7 +256,7 @@ ca_file_result ca_file_move(const char* src, const char* dst, bool overwrite) {
     if (rename(src, dst) == 0) {
         return ca_file_result::FILE_OK;
     } else {
-        return ca_internal_translate_errno(errno);
+        return internal::ca_translate_errno(errno);
     }
 }
 
@@ -322,7 +266,7 @@ ca_file_result ca_file_rename(const char* old_name, const char* new_name) {
     if (rename(old_name, new_name) == 0) {
         return ca_file_result::FILE_OK;
     } else {
-        return ca_internal_translate_errno(errno);
+        return internal::ca_translate_errno(errno);
     }
 }
 

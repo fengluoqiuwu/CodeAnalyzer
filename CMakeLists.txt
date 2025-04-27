@@ -34,6 +34,7 @@ message(STATUS "Using C++ standard: ${CMAKE_CXX_STANDARD}")
 
 if(WIN32)
     set(IS_WINDOWS TRUE)
+    add_definitions(-DNOMINMAX)
 elseif(UNIX)
     if(APPLE)
         set(IS_MACOS TRUE)
@@ -198,7 +199,7 @@ endif()
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 if (MSVC)
-    add_compile_options("/source-charset:utf-8" "/execution-charset:utf-8")
+    add_compile_options(/utf-8)
 endif()
 
 # ----------------------------
