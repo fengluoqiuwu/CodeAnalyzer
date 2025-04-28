@@ -12,6 +12,11 @@
 #include <cstdint>
 #include <limits>
 
+#ifndef CA_OS_WINDOWS
+#include <stddef.h>
+#include <unistd.h>
+#endif
+
 #ifdef _MSC_VER
 #include <BaseTsd.h>
 typedef SSIZE_T ssize_t;

@@ -702,7 +702,7 @@ constexpr ca_size_t lens[] = {
     4, sizeof("nKSJjfiCnkjbKjkf") - 1
 };
 
-constexpr ca_size_t index[] = {0, 269, 68, 1710, 631, 0};
+constexpr ca_size_t indexes[] = {0, 269, 68, 1710, 631, 0};
 constexpr ca_size_t reverse_index[] = {0, 6334, 6335, 1710, 6221, 0};
 constexpr ca_size_t count[] = {1, 43, 90, 1, 20, 0};
 constexpr bool result[] = {true, true, true, true, true, false};
@@ -723,7 +723,7 @@ TEST(CaFastSearchTest, TwoWayFind_ReturnValue) {
         bool found = two_way_find(indexer, indexer.get_length(), *pattern_indexers[i], pattern_indexers[i]->get_length(), &tmp);
         EXPECT_EQ(found, result[i]) << "no_reversed with i: " << i ;;
         if (found) {
-            EXPECT_EQ(tmp, index[i]) << "no_reversed with i: " << i ;
+            EXPECT_EQ(tmp, indexes[i]) << "no_reversed with i: " << i ;
         }
 
         found = two_way_find(reverse_indexer, reverse_indexer.get_length(), *reverse_pattern_indexers[i], reverse_pattern_indexers[i]->get_length(), &tmp);
@@ -782,7 +782,7 @@ TEST(CaFastSearchTest, DefaultFind_ReturnValue) {
         bool found = default_find(indexer, indexer.get_length(), *pattern_indexers[i], pattern_indexers[i]->get_length(), &tmp);
         EXPECT_EQ(found, result[i]) << "no_reversed with i: " << i ;;
         if (found) {
-            EXPECT_EQ(tmp, index[i]) << "no_reversed with i: " << i ;
+            EXPECT_EQ(tmp, indexes[i]) << "no_reversed with i: " << i ;
         }
 
         found = default_find(reverse_indexer, reverse_indexer.get_length(), *reverse_pattern_indexers[i], reverse_pattern_indexers[i]->get_length(), &tmp);
@@ -841,7 +841,7 @@ TEST(CaFastSearchTest, AdaptiveFind_ReturnValue) {
         bool found = adaptive_find(indexer, indexer.get_length(), *pattern_indexers[i], pattern_indexers[i]->get_length(), &tmp);
         EXPECT_EQ(found, result[i]) << "no_reversed with i: " << i ;;
         if (found) {
-            EXPECT_EQ(tmp, index[i]) << "no_reversed with i: " << i ;
+            EXPECT_EQ(tmp, indexes[i]) << "no_reversed with i: " << i ;
         }
 
         found = adaptive_find(reverse_indexer, reverse_indexer.get_length(), *reverse_pattern_indexers[i], reverse_pattern_indexers[i]->get_length(), &tmp);

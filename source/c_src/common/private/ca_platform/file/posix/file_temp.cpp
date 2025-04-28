@@ -8,8 +8,9 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <stdio.h>
-#include <sys/stat.h>
+#include <limits.h>
 #include "file/file_temp.h"
 #include "file/file_defs.h"
 #include "internal/posix_translater.h"

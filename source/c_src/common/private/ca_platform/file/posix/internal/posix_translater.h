@@ -9,11 +9,12 @@
 #define POSIX_TRANSLATER_H
 
 #include <fcntl.h>
+#include <errno.h>
 #include "file/file_defs.h"
 
 namespace ca::ca_file::internal {
 
-static int ca_internal_translate_open_flags(const ca_file_mode mode) {
+static int ca_translate_open_flags(const ca_file_mode mode) {
     switch (mode) {
         case ca_file_mode::FILE_MODE_READ:
         case ca_file_mode::FILE_MODE_READ_EXISTING:
@@ -48,7 +49,7 @@ static int ca_internal_translate_open_flags(const ca_file_mode mode) {
     }
 }
 
-static ca_file_result ca_internal_translate_errno(int err) {
+static ca_file_result ca_translate_errno(int err) {
     switch (err) {
         case 0: return ca_file_result::FILE_OK;
         case ENOENT: return ca_file_result::FILE_ERROR_NOT_FOUND;

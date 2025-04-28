@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <limits.h>
 #include <string.h>
+#include <stdlib.h>
 #include "file/file_path.h"
 #include "file/file_defs.h"
 #include "internal/posix_translater.h"

@@ -8,6 +8,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <stdio.h>
 #include "file/file.h"
 #include "file/file_defs.h"
 #include "internal/posix_translater.h"
