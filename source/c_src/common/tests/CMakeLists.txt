@@ -5,7 +5,6 @@
 # ================================
 
 set(COMMON_TEST_LISTS
-        "ca_misc"
         "ca_math"
         "ca_string:ca_math"
 )

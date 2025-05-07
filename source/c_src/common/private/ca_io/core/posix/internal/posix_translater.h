@@ -1,5 +1,5 @@
 // ================================
-// CodeAnalyzer - source/c_src/common/private/ca_platform/file/posix/internal/posix_translater
+// CodeAnalyzer - source/c_src/common/private/ca_io/core/posix/internal/posix_translater
 //
 // @file
 // @brief Translator for Posix file operations.
@@ -10,7 +10,7 @@
 
 #include <fcntl.h>
 #include <errno.h>
-#include "file/file_defs.h"
+#include "core/file_defs.h"
 
 namespace ca::ca_file::internal {
 

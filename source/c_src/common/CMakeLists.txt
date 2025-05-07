@@ -5,32 +5,125 @@
 # ================================
 
 # ================================
+# Platform
+# ================================
+
+add_subdirectory(public/ca_platform)
+
+if(WIN32)
+    set(CA_PLATFORM_API_NAME "win32")
+else()
+    set(CA_PLATFORM_API_NAME "posix")
+endif()
+
+# ================================
+# Character Library
+# ================================
+
+# Collect Character Library sources
+set(CA_CHARACTER_SOURCES
+        private/ca_char/ca_char_basic.cpp
+        private/ca_char/ca_char_defs.cpp
+        private/ca_char/ca_char_errors.cpp
+)
+
+# Collect Character Library headers to be installed
+set(CA_CHARACTER_PUBLIC_HEADERS
+    public/ca_char/ca_char.h
+    public/ca_char/ca_char_defs.h
+    public/ca_char/ca_char_errors.h
+    public/ca_char/ca_char_basic.h
+)
+
+# Character Library as a static library
+add_library(ca_char STATIC
+        public/ca_char/ca_char.h
+        public/ca_char/ca_char_defs.h
+        public/ca_char/ca_char_errors.h
+        private/ca_char/ca_char_errors.cpp
+        public/ca_char/ca_char_basic.h
+        private/ca_char/ca_char_defs.cpp
+        private/ca_char/ca_char_basic.cpp
+)
+
+# Set the sources for the Character Library
+target_sources(ca_char
+        PUBLIC ${CA_CHARACTER_PUBLIC_HEADERS}
+        PRIVATE ${CA_CHARACTER_SOURCES}
+)
+
+# Include directories for Character Library
+target_include_directories(ca_char
+        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/public/ca_char
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private/ca_char
+)
+
+target_link_libraries(ca_char PRIVATE ca_platform_config)
+
+# ================================
+# IO Library
+# ================================
+# Collect IO Library sources
+set(CA_IO_CORE_SOURCES
+)
+
+# Collect IO Library headers to be installed
+set(CA_IO_CORE_PUBLIC_HEADERS
+        public/ca_io/ca_io_core.h
+
+        public/ca_io/core/ca_io_file.h
+        public/ca_io/core/ca_io_file_rw.h
+        public/ca_io/core/ca_io_folder.h
+        public/ca_io/core/ca_io_path.h
+
+        public/ca_io/core/rw/ca_io_file_rw_asyn.h
+        public/ca_io/core/rw/ca_io_file_rw_sync.h
+)
+
+# IO Library as a static library
+add_library(ca_io_core STATIC )
+
+# Set the sources for the IO Library
+target_sources(ca_io_core
+        PUBLIC ${CA_IO_CORE_PUBLIC_HEADERS}
+        PRIVATE ${CA_IO_CORE_SOURCES}
+)
+
+# Include directories for IO Library
+target_include_directories(ca_io_core
+        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/public/ca_io
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private/ca_io
+)
+
+target_link_libraries(ca_io_core PRIVATE ca_platform_config ca_string ca_math)
+
+# ================================
 # Misc Library
 # ================================
-# Collect Misc Library sources
-set(CA_MISC_SOURCES
-        private/ca_misc/temp.cpp
-)
-
-# Collect Misc Library headers to be installed
-set(CA_MISC_PUBLIC_HEADERS
-        public/ca_misc/ca_base_macros.h
-)
-
-# Build Misc Library as a static library
-add_library(ca_misc STATIC)
-
-# Set the sources for the Misc Library
-target_sources(ca_misc
-    PUBLIC ${CA_MISC_PUBLIC_HEADERS}
-    PRIVATE ${CA_MISC_SOURCES}
-)
-
-# Include directories for Misc Library
-target_include_directories(ca_misc
-        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/public/ca_misc
-        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private/ca_misc
-)
+## Collect Misc Library sources
+#set(CA_MISC_SOURCES
+#        private/ca_misc/temp.cpp
+#)
+#
+## Collect Misc Library headers to be installed
+#set(CA_MISC_PUBLIC_HEADERS
+#        public/ca_misc/ca_base_macros.h
+#)
+#
+## Build Misc Library as a static library
+#add_library(ca_misc STATIC)
+#
+## Set the sources for the Misc Library
+#target_sources(ca_misc
+#    PUBLIC ${CA_MISC_PUBLIC_HEADERS}
+#    PRIVATE ${CA_MISC_SOURCES}
+#)
+#
+## Include directories for Misc Library
+#target_include_directories(ca_misc
+#        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/public/ca_misc
+#        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private/ca_misc
+#)
 
 # ================================
 # Math Library
@@ -65,57 +158,7 @@ target_include_directories(ca_math
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private/ca_math
 )
 
-target_link_libraries(ca_math PRIVATE ca_misc)
-
-# ================================
-# Platform
-# ================================
-
-add_subdirectory(public/ca_platform)
-
-if(WIN32)
-    set(CA_PLATFORM_API_NAME "win32")
-else()
-    set(CA_PLATFORM_API_NAME "posix")
-endif()
-
-# Collect Platform Library sources
-set(CA_PLATFORM_SOURCES
-        private/ca_platform/file/${CA_PLATFORM_API_NAME}/file.cpp
-        private/ca_platform/file/${CA_PLATFORM_API_NAME}/file_error.cpp
-        private/ca_platform/file/${CA_PLATFORM_API_NAME}/file_path.cpp
-        private/ca_platform/file/${CA_PLATFORM_API_NAME}/file_temp.cpp
-)
-
-# Collect Platform Library headers to be installed
-set(CA_PLATFORM_PUBLIC_HEADERS
-        public/ca_platform/ca_platform.h
-        public/ca_platform/ca_platform_file.h
-        public/ca_platform/ca_platform_thread.h
-
-        public/ca_platform/file/file.h
-        public/ca_platform/file/file_defs.h
-        public/ca_platform/file/file_error.h
-        public/ca_platform/file/file_path.h
-        public/ca_platform/file/file_temp.h
-)
-
-# Platform Library as a static library
-add_library(ca_platform STATIC)
-
-# Set the sources for the Platform Library
-target_sources(ca_platform
-        PUBLIC ${CA_PLATFORM_PUBLIC_HEADERS}
-        PRIVATE ${CA_PLATFORM_SOURCES}
-)
-
-# Include directories for Math Library
-target_include_directories(ca_platform
-        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/public/ca_platform
-        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private/ca_platform
-)
-
-target_link_libraries(ca_platform PRIVATE ca_platform_config ca_string ca_math)
+target_link_libraries(ca_math PRIVATE )
 
 # ================================
 # String Library
@@ -155,7 +198,7 @@ target_include_directories(ca_string
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private/ca_string
 )
 
-target_link_libraries(ca_string PRIVATE utf8proc ca_misc ca_math)
+target_link_libraries(ca_string PRIVATE utf8proc ca_math)
 
 # ================================
 # Tests

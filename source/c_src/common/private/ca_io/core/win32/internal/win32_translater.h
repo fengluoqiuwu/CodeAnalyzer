@@ -1,5 +1,5 @@
 // ================================
-// CodeAnalyzer - source/c_src/common/private/ca_platform/file/win32/internal/win32_translater
+// CodeAnalyzer - source/c_src/common/private/ca_io/core/win32/internal/win32_translater
 //
 // @file
 // @brief Translator for Win32 file operations.
@@ -9,7 +9,7 @@
 #define WIN32_TRANSLATER_H
 
 #include <windows.h>
-#include "file/file_defs.h"
+#include "core/file_defs.h"
 
 namespace ca::ca_file::internal {
 
